@@ -1,5 +1,6 @@
 package com.cadaewen.wildbound.companion.bat;
 
+import com.cadaewen.wildbound.companion.CompanionMode;
 import com.cadaewen.wildbound.companion.CompanionType;
 
 import net.minecraft.core.BlockPos;
@@ -43,11 +44,19 @@ public class BatCompanion extends CompanionType {
     }
 
     @Override
-    public boolean serverTickBehavior(Mob mob, ServerLevel level, Player owner, boolean sitting) {
+    public boolean serverTickBehavior(Mob mob, ServerLevel level, Player owner, CompanionMode mode) {
         if (!(mob instanceof Bat bat)) {
             return false;
         }
-        if (sitting || owner == null) {
+        // Wander: hand the bat back to vanilla flight. Clear any lingering rest from a prior sit so it
+        // doesn't stay pinned (vanilla would eventually wake it, but this avoids a beat of stuck resting).
+        if (mode == CompanionMode.WANDER) {
+            if (bat.isResting()) {
+                bat.setResting(false);
+            }
+            return false;
+        }
+        if (mode == CompanionMode.SIT || owner == null) {
             hangOrHover(bat, level);
         } else {
             followOwner(bat, owner);

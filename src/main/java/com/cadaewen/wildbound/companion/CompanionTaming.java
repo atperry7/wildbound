@@ -37,13 +37,15 @@ public final class CompanionTaming {
         ItemStack held = player.getItemInHand(hand);
         boolean tamed = CompanionBehavior.isCompanion(mob);
 
-        // Empty main hand on our own companion → toggle sit/follow.
+        // Empty main hand on our own companion → mode toggle. Sneaking toggles WANDER; otherwise SIT.
+        // Each lands the companion in a predictable place: plain RC ⇒ SIT or FOLLOW; sneak+RC ⇒ WANDER or
+        // FOLLOW. (Held-item interactions stay free for future per-companion actions, e.g. a buff toggle.)
         if (tamed && held.isEmpty() && hand == InteractionHand.MAIN_HAND) {
             if (!player.getUUID().equals(CompanionBehavior.getOwnerUuid(mob))) {
                 return InteractionResult.PASS;
             }
             if (!level.isClientSide()) {
-                CompanionBehavior.setSitting(mob, !CompanionBehavior.isSitting(mob));
+                toggleMode(mob, player.isShiftKeyDown());
             }
             return InteractionResult.SUCCESS;
         }
@@ -72,6 +74,21 @@ public final class CompanionTaming {
         }
 
         return InteractionResult.PASS;
+    }
+
+    /**
+     * Plain right-click toggles between {@link CompanionMode#SIT} and {@link CompanionMode#FOLLOW};
+     * sneak right-click toggles between {@link CompanionMode#WANDER} and {@link CompanionMode#FOLLOW}.
+     */
+    private static void toggleMode(Mob mob, boolean sneaking) {
+        CompanionMode mode = CompanionBehavior.getMode(mob);
+        CompanionMode next;
+        if (sneaking) {
+            next = mode == CompanionMode.WANDER ? CompanionMode.FOLLOW : CompanionMode.WANDER;
+        } else {
+            next = mode == CompanionMode.SIT ? CompanionMode.FOLLOW : CompanionMode.SIT;
+        }
+        CompanionBehavior.setMode(mob, next);
     }
 
     private static void spawnParticles(ServerLevel level, Mob mob, SimpleParticleType particle) {

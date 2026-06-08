@@ -37,7 +37,7 @@ public class CompanionFollowOwnerGoal extends Goal {
 
     @Override
     public boolean canUse() {
-        if (!CompanionBehavior.isCompanion(mob) || CompanionBehavior.isSitting(mob)) {
+        if (!CompanionBehavior.isFollowing(mob)) {
             return false;
         }
         Player candidate = CompanionBehavior.getOwner(mob);
@@ -50,7 +50,7 @@ public class CompanionFollowOwnerGoal extends Goal {
 
     @Override
     public boolean canContinueToUse() {
-        if (!CompanionBehavior.isCompanion(mob) || CompanionBehavior.isSitting(mob)) {
+        if (!CompanionBehavior.isFollowing(mob)) {
             return false;
         }
         return owner != null && owner.isAlive() && mob.distanceToSqr(owner) > stopDistSqr;

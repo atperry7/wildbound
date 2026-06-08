@@ -24,12 +24,31 @@ public final class CompanionBehavior {
         return mob.hasAttached(WildboundAttachments.OWNER);
     }
 
-    public static boolean isSitting(Mob mob) {
-        return mob.getAttachedOrElse(WildboundAttachments.SITTING, Boolean.FALSE);
+    public static CompanionMode getMode(Mob mob) {
+        return mob.getAttachedOrElse(WildboundAttachments.MODE, CompanionMode.FOLLOW);
     }
 
-    public static void setSitting(Mob mob, boolean sitting) {
-        mob.setAttached(WildboundAttachments.SITTING, sitting);
+    public static void setMode(Mob mob, CompanionMode mode) {
+        mob.setAttached(WildboundAttachments.MODE, mode);
+    }
+
+    /**
+     * Following: a companion trailing the owner and granting its passive while in range. Requires companion
+     * status explicitly — {@link #getMode} defaults to {@code FOLLOW} for any mob, so an untamed mob would
+     * otherwise read as "following".
+     */
+    public static boolean isFollowing(Mob mob) {
+        return isCompanion(mob) && getMode(mob) == CompanionMode.FOLLOW;
+    }
+
+    /** Sitting: held in a natural pose, no passive. */
+    public static boolean isSitting(Mob mob) {
+        return getMode(mob) == CompanionMode.SIT;
+    }
+
+    /** Wandering: roaming on vanilla AI, owned but not following and granting no passive. */
+    public static boolean isWandering(Mob mob) {
+        return getMode(mob) == CompanionMode.WANDER;
     }
 
     public static UUID getOwnerUuid(Mob mob) {
@@ -51,7 +70,7 @@ public final class CompanionBehavior {
         AABB box = owner.getBoundingBox().inflate(
                 CompanionType.FOLLOW_RANGE, CompanionType.FOLLOW_RANGE, CompanionType.FOLLOW_RANGE);
         for (Mob mob : owner.level().getEntitiesOfClass(Mob.class, box, m -> m.getType() == type)) {
-            if (isCompanion(mob) && !isSitting(mob)
+            if (isCompanion(mob) && isFollowing(mob)
                     && owner.getUUID().equals(getOwnerUuid(mob))
                     && mob.distanceToSqr(owner) <= CompanionType.FOLLOW_RANGE_SQR) {
                 return mob;
@@ -62,7 +81,7 @@ public final class CompanionBehavior {
 
     public static void tame(Mob mob, Player owner) {
         mob.setAttached(WildboundAttachments.OWNER, owner.getUUID());
-        mob.setAttached(WildboundAttachments.SITTING, Boolean.FALSE);
+        mob.setAttached(WildboundAttachments.MODE, CompanionMode.FOLLOW);
         // Companions never despawn (matters most for the bat, an AmbientCreature that otherwise would).
         mob.setPersistenceRequired();
     }
@@ -80,10 +99,10 @@ public final class CompanionBehavior {
 
         ServerLevel level = (ServerLevel) mob.level();
         Player owner = getOwner(mob);
-        boolean sitting = isSitting(mob);
+        CompanionMode mode = getMode(mob);
 
-        refreshPassive(mob, type, owner, sitting);
-        return type.serverTickBehavior(mob, level, owner, sitting);
+        refreshPassive(mob, type, owner, mode);
+        return type.serverTickBehavior(mob, level, owner, mode);
     }
 
     /**
@@ -92,12 +111,12 @@ public final class CompanionBehavior {
      * hundreds of companions cheaply, and a sitting companion never cancels an effect that another
      * following companion is still sustaining.
      */
-    private static void refreshPassive(Mob mob, CompanionType type, Player owner, boolean sitting) {
+    private static void refreshPassive(Mob mob, CompanionType type, Player owner, CompanionMode mode) {
         Holder<MobEffect> effect = type.passiveEffect();
         if (effect == null || !(owner instanceof ServerPlayer serverOwner)) {
             return;
         }
-        boolean active = !sitting && mob.distanceToSqr(owner) <= CompanionType.FOLLOW_RANGE_SQR;
+        boolean active = mode == CompanionMode.FOLLOW && mob.distanceToSqr(owner) <= CompanionType.FOLLOW_RANGE_SQR;
         if (active && mob.tickCount % CompanionType.REAPPLY_INTERVAL_TICKS == 0) {
             type.applyPassiveBonus(serverOwner);
         }

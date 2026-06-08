@@ -42,22 +42,42 @@ public abstract class CompanionType {
     /** Status effect granted while following, or {@code null} for special-case companions (e.g. Fox XP). */
     public abstract Holder<MobEffect> passiveEffect();
 
-    /** Effect amplifier — always 0 (Level I) by design. */
+    /** Default effect amplifier (Level I). Per-mob config may raise it via {@link #setPassiveAmplifier}. */
+    public static final int DEFAULT_AMPLIFIER = 0;
+
+    /** Default taming odds (1-in-3). Per-mob config may change it via {@link #setTamingChanceOneInN}. */
+    public static final int DEFAULT_TAMING_CHANCE_ONE_IN_N = 3;
+
+    private int passiveAmplifier = DEFAULT_AMPLIFIER;
+    private int tamingChanceOneInN = DEFAULT_TAMING_CHANCE_ONE_IN_N;
+
+    /** Effect amplifier (0 = Level I). Configurable per mob. */
     public int passiveAmplifier() {
-        return 0;
+        return passiveAmplifier;
     }
 
-    /** Taming succeeds with a 1-in-N chance. */
+    /** Config hook: set the effect amplifier; clamped to {@code >= 0}. */
+    public void setPassiveAmplifier(int amplifier) {
+        this.passiveAmplifier = Math.max(0, amplifier);
+    }
+
+    /** Taming succeeds with a 1-in-N chance. Configurable per mob. */
     public int tamingChanceOneInN() {
-        return 3;
+        return tamingChanceOneInN;
+    }
+
+    /** Config hook: set the taming odds; clamped to {@code >= 1} (guaranteed if 1). */
+    public void setTamingChanceOneInN(int oneInN) {
+        this.tamingChanceOneInN = Math.max(1, oneInN);
     }
 
     /**
-     * Per-tick movement/animation override for a tamed companion, server-side only.
+     * Per-tick movement/animation override for a tamed companion, server-side only. Receives the current
+     * {@link CompanionMode} so a non-goal companion (the bat) can drive follow/sit/wander itself.
      *
      * @return {@code true} to suppress the mob's vanilla AI step this tick.
      */
-    public boolean serverTickBehavior(Mob mob, ServerLevel level, Player owner, boolean sitting) {
+    public boolean serverTickBehavior(Mob mob, ServerLevel level, Player owner, CompanionMode mode) {
         return false;
     }
 
