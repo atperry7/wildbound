@@ -35,12 +35,22 @@ Tamed state is attached to the **existing vanilla mob**; we do not register `Tam
 the mob on taming. This keeps entity identity stable and avoids renderer/attribute wiring.
 
 - **State** — Fabric Attachment API (`companion/WildboundAttachments.java`): `OWNER` (UUID, persistent;
-  its presence == "is a companion") and `SITTING` (Boolean, persistent). Persistence is automatic.
+  its presence == "is a companion") and `MODE` (the `CompanionMode` enum — `FOLLOW`/`SIT`/`WANDER`,
+  persistent; absent == `FOLLOW`). Persistence is automatic. Read mode via `CompanionBehavior`'s
+  `isFollowing`/`isSitting`/`isWandering` — **`isFollowing` also checks `isCompanion`** because `getMode`
+  defaults any mob (even untamed) to `FOLLOW`. Only `FOLLOW` is "active" (grants the passive); `WANDER`
+  roams on vanilla AI, still owned (persists, won't flee, won't be hunted by other companions).
 - **Per-animal definition** — subclass `CompanionType` (taming item/predicate, passive effect + amplifier,
-  taming chance, sit-pose hooks) and register it in `CompanionRegistry` keyed by `EntityType`.
-- **Shared runtime** — `CompanionBehavior` (ownership/sit access, the per-tick driver `serverTick`, the
+  taming chance, sit-pose hooks) and register it in `CompanionRegistry` keyed by `EntityType`. Amplifier and
+  taming chance are mutable fields with config setters (see Config below); the rest is behaviour.
+- **Shared runtime** — `CompanionBehavior` (ownership/mode access, the per-tick driver `serverTick`, the
   passive-effect refresh, and `findActiveCompanion`/`hasActiveCompanion`).
-- **Taming + sit toggle** — `CompanionTaming` via Fabric `UseEntityCallback` (no per-animal interact mixin).
+- **Taming + mode toggle** — `CompanionTaming` via Fabric `UseEntityCallback` (no per-animal interact mixin).
+  Empty-hand RC toggles SIT↔FOLLOW; **sneak**+empty-hand RC toggles WANDER↔FOLLOW. Held-item interactions
+  stay free for future per-companion actions. Taming is gated by `CompanionRegistry.isEnabled`.
+- **Config** — `config/WildboundConfig.java` reads `config/wildbound.json` once at init (generated from
+  defaults if missing) and applies per-mob `enabled` (→ `CompanionRegistry.setEnabled`), `tamingChanceOneInN`,
+  and `effectAmplifier`. Flicker constants and follow range are deliberately **not** configurable.
 - **Advancements** — custom `CompanionTamedTrigger` (`advancement/`), registered as
   `wildbound:companion_tamed` in `registry/ModCriteria`, fired from `CompanionTaming` on success. JSON in
   `src/main/resources/data/wildbound/advancement/` (folder is singular `advancement` this version).
@@ -54,7 +64,8 @@ the mob on taming. This keeps entity identity stable and avoids renderer/attribu
   `@Accessor` (do NOT `@Shadow` the inherited `goalSelector` field — Mixin doesn't resolve inherited
   *fields* and it fails at apply time though it compiles).
 - **The Bat** is the exception: it bypasses the goal system (flight is in `customServerAiStep`), so
-  `BatMixin` drives follow/sit there and `BatCompanion` steers `deltaMovement` directly.
+  `BatMixin` drives follow/sit there and `BatCompanion` steers `deltaMovement` directly. In `WANDER` its
+  `serverTickBehavior` returns `false` (clearing any leftover rest), handing flight back to vanilla.
 
 ### Passive effects
 

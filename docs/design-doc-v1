@@ -8,6 +8,10 @@
 > 1. **No parallel entity types.** Tamed state is *attached to the vanilla mob* via the Fabric Attachment API rather than registering `Tamed*Entity` types and swapping the mob on taming. Less code per animal, stable entity identity, no renderer wiring.
 > 2. **No active effect teardown.** Following companions refresh the passive effect; sitting / out-of-range companions simply stop and let it fade. This avoids one companion cancelling another's shared effect and scales flat to hundreds of companions.
 > 3. **Bat AI is velocity-steered, not goal-based.** Vanilla `Bat` bypasses the goal system, so follow/sit are driven from `customServerAiStep`, reusing the bat's native resting state to hang from ceilings.
+>
+> **Revision note (v1.1, post-roster):** Two further changes since the roster filled out:
+> 4. **State is a tri-state `CompanionMode` enum (FOLLOW / SIT / WANDER), not a `SITTING` boolean.** WANDER lets an owned companion roam on vanilla AI with no passive. Empty-hand RC toggles SIT↔FOLLOW; sneak+empty-hand RC toggles WANDER↔FOLLOW. Only FOLLOW is "active" for passives. Wherever this doc says `SITTING` / "sit toggle," read `MODE` / "mode toggle."
+> 5. **Per-mob config.** `config/wildbound.json` (hand-rolled, generated from defaults) sets each mob's `enabled`, `tamingChanceOneInN`, and `effectAmplifier`. Internal mechanics (flicker-safe effect duration / reapply interval, follow range) stay non-configurable on purpose. Disabling gates new taming only; existing companions persist.
 
 ## Build & Mappings
 

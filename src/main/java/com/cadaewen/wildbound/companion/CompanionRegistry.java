@@ -1,7 +1,8 @@
 package com.cadaewen.wildbound.companion;
 
-import java.util.HashMap;
+import java.util.Collections;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
 
@@ -21,7 +22,8 @@ import net.minecraft.world.entity.EntityType;
 /** Maps vanilla entity types to their Wildbound companion definitions. */
 public final class CompanionRegistry {
 
-    private static final Map<EntityType<?>, CompanionType> BY_TYPE = new HashMap<>();
+    // LinkedHashMap so the catalogue (and the generated default config) keeps registration order.
+    private static final Map<EntityType<?>, CompanionType> BY_TYPE = new LinkedHashMap<>();
 
     /**
      * Types disabled by config. Empty by default (everything enabled), so until a config system populates
@@ -70,6 +72,11 @@ public final class CompanionRegistry {
 
     public static int count() {
         return BY_TYPE.size();
+    }
+
+    /** All registered companions in registration order (read-only). Used to generate the default config. */
+    public static Map<EntityType<?>, CompanionType> all() {
+        return Collections.unmodifiableMap(BY_TYPE);
     }
 
     /** Registers every companion. Bat is the first; further animals slot in here. */

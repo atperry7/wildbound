@@ -96,28 +96,19 @@ Still open:
   - *Implementation sketch:* a per-companion `buffEnabled` flag (attachment, default true). When false,
     `CompanionBehavior.refreshPassive` skips applying (and `FoxXpBonus`/`hasActiveCompanion` treat it as
     inactive). Follow/sit behaviour unchanged.
-  - *Interaction collision:* this and the "wander" idea both want sneak+right-click. Need ONE coherent
-    interaction map. Proposal to pin down: empty-hand RC = sit/follow toggle (current); sneak + empty-hand
-    RC = cycle/secondary mode; held-item interactions reserved (taming already uses held item on untamed).
-    Resolve before implementing either, so controls stay predictable.
+  - *Interaction map (now settled by the wander work):* empty-hand RC = SIT↔FOLLOW; sneak + empty-hand
+    RC = WANDER↔FOLLOW; held-item-on-untamed = taming. So buff-off should take the remaining lane —
+    **held-item-on-tamed** (e.g. sneak + RC while holding a specific item, on your own companion) — rather
+    than reusing sneak+empty-hand RC, which now toggles wander. Pick the trigger item, then `CompanionTaming`
+    grows one more branch (held + tamed + owner).
 
-- **"Wander" mode (third mode beyond follow/sit).** Toggle with **shift + right-click** (sneak + use)
-  on a tamed companion. In wander mode the animal roams freely on its vanilla AI — it does *not*
-  follow, does *not* stay sitting, and grants **no passive effect**. It stays owned (persists, doesn't
-  despawn, doesn't flee its owner). Use case: letting tamed animals mill around a base/pen as living
-  decoration without buffing or trailing the player.
-  - *Implementation sketch:*
-    - State is currently a `SITTING` boolean. Promote to a tri-state mode (FOLLOW / SIT / WANDER) —
-      e.g. an enum attachment, or add a `WANDER` boolean alongside `SITTING`.
-    - Interaction: empty-hand right-click keeps toggling sit/follow (`CompanionTaming`); add a
-      sneak-right-click branch that toggles WANDER. Read sneak via `player.isShiftKeyDown()`.
-    - Passive effect: `CompanionBehavior.refreshPassive` should only apply in FOLLOW (wander = inactive,
-      same as sit — it already just stops refreshing).
-    - Goals: `CompanionFollowOwnerGoal` / `CompanionSitGoal` `canUse` must be false in WANDER so vanilla
-      goals take over; the bat's `serverTickBehavior` should return `false` (let vanilla fly) in WANDER.
-    - Keep `setPersistenceRequired` and the no-flee behavior regardless of mode.
-  - Touches: `WildboundAttachments`, `CompanionBehavior`, `CompanionTaming`, `BatCompanion`,
-    `CompanionFollowOwnerGoal`, `CompanionSitGoal`.
+- **"Wander" mode (third mode beyond follow/sit).** ✅ **Done.** `SITTING` boolean promoted to a
+  `CompanionMode` enum attachment (FOLLOW / SIT / WANDER). Empty-hand RC toggles SIT↔FOLLOW; sneak +
+  empty-hand RC toggles WANDER↔FOLLOW (`CompanionTaming.toggleMode`). In WANDER the companion roams on
+  vanilla AI, grants no passive, but stays owned (persists, no-flee, not hunted by other companions). The
+  bat returns `false` from `serverTickBehavior` in WANDER (handing flight to vanilla). **Verify in-client:**
+  the held-item lane is still reserved for the future buff-off toggle (see next item). *Best-effort —
+  in-game pass still wanted for wander movement feel per-animal.*
 
 ## How to use this file
 

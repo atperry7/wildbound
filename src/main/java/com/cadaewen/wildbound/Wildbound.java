@@ -12,6 +12,7 @@ import com.cadaewen.wildbound.companion.CompanionRegistry;
 import com.cadaewen.wildbound.companion.CompanionTaming;
 import com.cadaewen.wildbound.companion.WildboundAttachments;
 import com.cadaewen.wildbound.companion.goal.CompanionGoals;
+import com.cadaewen.wildbound.config.WildboundConfig;
 import com.cadaewen.wildbound.registry.ModCriteria;
 
 public class Wildbound implements ModInitializer {
@@ -27,6 +28,7 @@ public class Wildbound implements ModInitializer {
 		WildboundAttachments.init();
 		ModCriteria.init();
 		CompanionRegistry.init();
+		WildboundConfig.loadAndApply();
 		UseEntityCallback.EVENT.register(CompanionTaming::onUseEntity);
 
 		// Goal-driven companions (ground/flying/swimming) get their follow/sit/tick goals on load —
