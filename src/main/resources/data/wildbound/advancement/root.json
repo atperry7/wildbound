@@ -1,6 +1,6 @@
 {
   "display": {
-    "icon": { "id": "minecraft:spider_eye" },
+    "icon": { "id": "minecraft:wildflowers" },
     "title": { "text": "Wildbound" },
     "description": { "text": "Earned the trust of a wild creature." },
     "background": "minecraft:gui/advancements/backgrounds/husbandry",

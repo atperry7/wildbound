@@ -23,20 +23,25 @@ loop works; these make it feel better. Grouped loosely; not strictly ordered.
 
 ## Roster movement quirks (new companions, accepted for now)
 
-These ride the generic goal-based path (follow via navigation, sit stops navigation). Works, but each
-has a vanilla-behaviour wrinkle worth a later look:
+These ride the generic goal-based path (follow via navigation; sit holds position via `CompanionSitGoal`,
+which now also delegates a natural pose through `CompanionType.onStartSitting/onSitTick/onStopSitting`).
 
-- **Axolotl** — amphibious. Following on land is a slow flop, and the follow-teleport lands it on dry
-  ground (`canStandAt` wants air over a solid block), which can strand it out of water. *Idea:* prefer
-  water for teleport targets; maybe only follow when the owner is in/near water.
-- **Bee** — flying. Follow works via flying navigation, but "sit" just stops navigation, so it hovers
-  rather than landing/settling. *Idea:* a small land-and-idle behaviour for flying companions on sit.
-- **Armadillo** — rolls up when it senses a threat (e.g. player sprinting nearby); a following armadillo
-  may curl mid-follow. Cosmetic; *idea:* suppress the threat-roll for companions, like the flee-suppress.
-- **Frog** — jump-follows fine; its tongue will still snatch nearby slimes/small mobs. Probably fine as
-  characterful, but note it eats baby mobs.
-- **Sit pose** — ground companions just stop in place (no vanilla "sitting" pose like a wolf). Reads as
-  "standing still." A real sit/lie pose would need per-animal pose handling.
+Sit poses now wired:
+- **Panda** — uses vanilla `sit(true)` pose. ✅
+- **Armadillo** — rolls into a ball on sit (vanilla scared state, which peeks periodically on its own). ✅
+- **Axolotl** — the "wandered while sitting" bug is fixed (sit goal now zeroes residual horizontal
+  velocity each tick, needed for swimmers). ✅
+- **Bee** — no vanilla rest-pose flag exists, so sit makes it fly down and land on the ground
+  (`controlsSitMovement` + `onSitTick`). **Best-effort — verify in-game; may need tuning** (flying move
+  control vs. our descent, and whether it lands cleanly vs. bobbing).
+
+Still open:
+- **Axolotl follow on land** — amphibious, so following on land is a slow flop, and the follow-teleport
+  (`canStandAt` wants air over solid) can strand it out of water. *Idea:* prefer water teleport targets.
+- **Armadillo follow** — may still curl up mid-follow if it senses a threat (sprinting player). Cosmetic;
+  *idea:* suppress the threat-roll while following, like the flee-suppress.
+- **Frog** — jump-follows fine; its tongue still snatches nearby slimes/small mobs (characterful, but
+  note it eats baby mobs).
 
 ## Effect lifecycle (accepted trade-offs, revisit only if they annoy in practice)
 

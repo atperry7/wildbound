@@ -61,6 +61,26 @@ public abstract class CompanionType {
         return false;
     }
 
+    /** Called once when a goal-driven companion enters sit mode. Override to apply a natural sit pose. */
+    public void onStartSitting(Mob mob) {
+    }
+
+    /** Called once when a goal-driven companion leaves sit mode. Override to clear the sit pose. */
+    public void onStopSitting(Mob mob) {
+    }
+
+    /** Called every tick while a goal-driven companion sits. Override to hold/re-assert a pose. */
+    public void onSitTick(Mob mob) {
+    }
+
+    /**
+     * If true, the sit goal won't stop navigation or zero velocity — the companion drives its own sit
+     * movement in {@link #onSitTick} (e.g. a bee flying down to land rather than freezing mid-air).
+     */
+    public boolean controlsSitMovement() {
+        return false;
+    }
+
     /** Applies the passive bonus to the owner. Default grants the status effect; Fox-style companions override. */
     public void applyPassiveBonus(ServerPlayer owner) {
         Holder<MobEffect> effect = passiveEffect();
