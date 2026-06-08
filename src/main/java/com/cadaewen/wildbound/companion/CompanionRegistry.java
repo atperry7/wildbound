@@ -1,8 +1,11 @@
 package com.cadaewen.wildbound.companion;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
+import com.cadaewen.wildbound.Wildbound;
 import com.cadaewen.wildbound.companion.armadillo.ArmadilloCompanion;
 import com.cadaewen.wildbound.companion.axolotl.AxolotlCompanion;
 import com.cadaewen.wildbound.companion.bat.BatCompanion;
@@ -20,11 +23,22 @@ public final class CompanionRegistry {
 
     private static final Map<EntityType<?>, CompanionType> BY_TYPE = new HashMap<>();
 
+    /**
+     * Types disabled by config. Empty by default (everything enabled), so until a config system populates
+     * this the behaviour is unchanged. {@link #BY_TYPE} stays the full catalogue — disabling never removes
+     * a type, it just gates new taming (see {@link #isEnabled}); already-tamed companions keep working.
+     */
+    private static final Set<EntityType<?>> DISABLED = new HashSet<>();
+
     private CompanionRegistry() {
     }
 
     public static void register(EntityType<?> type, CompanionType companion) {
-        BY_TYPE.put(type, companion);
+        CompanionType previous = BY_TYPE.put(type, companion);
+        if (previous != null) {
+            Wildbound.LOGGER.warn("Duplicate companion registration for {}: {} replaced {}.",
+                    type, companion.getClass().getSimpleName(), previous.getClass().getSimpleName());
+        }
     }
 
     public static CompanionType get(EntityType<?> type) {
@@ -33,6 +47,25 @@ public final class CompanionRegistry {
 
     public static CompanionType get(Entity entity) {
         return BY_TYPE.get(entity.getType());
+    }
+
+    /**
+     * Whether this type is a registered companion that is currently enabled. Future per-mob config toggles
+     * flip this via {@link #setEnabled}; the taming flow consults it so a disabled mob behaves like a plain
+     * wild animal. Read state (effects/goals on existing companions) deliberately does not check this, so
+     * disabling a type never strands pets already tamed.
+     */
+    public static boolean isEnabled(EntityType<?> type) {
+        return BY_TYPE.containsKey(type) && !DISABLED.contains(type);
+    }
+
+    /** Enables or disables taming of a registered companion type (config hook; no-op for unregistered types). */
+    public static void setEnabled(EntityType<?> type, boolean enabled) {
+        if (enabled) {
+            DISABLED.remove(type);
+        } else {
+            DISABLED.add(type);
+        }
     }
 
     public static int count() {

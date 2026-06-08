@@ -48,8 +48,9 @@ public final class CompanionTaming {
             return InteractionResult.SUCCESS;
         }
 
-        // Taming attempt: holding the right item on an untamed animal.
-        if (!tamed && type.isTamingItem(held)) {
+        // Taming attempt: holding the right item on an untamed animal. A config-disabled type is skipped
+        // here so it behaves like a plain wild animal (already-tamed companions are unaffected).
+        if (!tamed && CompanionRegistry.isEnabled(mob.getType()) && type.isTamingItem(held)) {
             if (level.isClientSide()) {
                 return InteractionResult.SUCCESS;
             }
