@@ -1,0 +1,19 @@
+{
+  "parent": "wildbound:root",
+  "display": {
+    "icon": { "id": "minecraft:sweet_berries" },
+    "title": { "text": "Fox Friend" },
+    "description": { "text": "They usually don't trust anyone." },
+    "show_toast": true,
+    "announce_to_chat": true
+  },
+  "criteria": {
+    "tamed_fox": {
+      "trigger": "wildbound:companion_tamed",
+      "conditions": { "animal_type": "minecraft:fox" }
+    }
+  },
+  "requirements": [
+    ["tamed_fox"]
+  ]
+}

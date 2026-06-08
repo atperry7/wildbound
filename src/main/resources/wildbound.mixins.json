@@ -5,7 +5,8 @@
 	"mixins": [
 		"AvoidEntityGoalMixin",
 		"BatMixin",
-		"MobAccessor"
+		"MobAccessor",
+		"ServerPlayerExperienceMixin"
 	],
 	"injectors": {
 		"defaultRequire": 1

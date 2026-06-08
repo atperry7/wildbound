@@ -118,13 +118,14 @@ The passive effect system runs in `CompanionBehavior.serverTick`, called from ea
 
 Because there is no vanilla potion effect for XP gain, the Fox passive is implemented as a custom event hook rather than a status effect. It is the only companion that works this way.
 
-**Implementation approach:**
-- Hook into the `LivingEntity` experience drop event (Fabric API: `ServerLivingEntityEvents` or equivalent)
-- Hook into the block break XP drop event
-- When the event fires, check if the player has a following (non-sitting) tamed Fox within 24 blocks
-- If so, multiply the XP drop amount by **x2** before it is applied
-- This is a one-time multiplier per drop event, not a stacking buff
-- Does not apply when the fox is sitting
+**Implementation approach (as built):**
+- A single mixin on `ServerPlayer#giveExperiencePoints(int)` — every server-side XP award funnels through
+  it (mob kills, mining, smelting, breeding, ...), so one `@ModifyVariable` covers all sources cleanly,
+  with no per-drop event plumbing.
+- It doubles the amount only when `CompanionBehavior.hasActiveCompanion(player, EntityType.FOX)` is true —
+  i.e. a following (non-sitting) tamed fox owned by the player is within the 24-block follow range.
+- `FoxCompanion.passiveEffect()` returns `null`, so the per-tick status-effect path does nothing for the
+  fox; the bonus is entirely event-driven via the mixin. This is the only companion that works this way.
 
 ---
 
@@ -225,7 +226,11 @@ Vanilla `Bat` extends `AmbientCreature` and registers **no movement goals** — 
 5. ✅ Compiles; dedicated server boots and the mixin applies cleanly
 6. ✅ Advancements + the `wildbound:companion_tamed` criterion trigger (root + bat + rabbit)
 7. ✅ Rabbit companion added — validated the framework extends to a goal-based ground animal
-8. ☐ Remaining roster (Fox, Frog, Axolotl, Bee, Panda, Armadillo) + capstone advancement
+8. ✅ Goal attachment moved to a `ServerEntityEvents.ENTITY_LOAD` hook — ground/flying/swimming
+   companions need no per-animal mixin (just a `CompanionType` + registration)
+9. ✅ Full roster: Panda, Armadillo, Frog, Bee, Axolotl, and Fox (the XP-bonus special case)
+10. ✅ Per-animal sit poses (panda sit, armadillo roll-up, bee land, axolotl hold) + capstone advancement
+11. ☐ Polish pass — see `docs/refinements.md` (bat follow-stacking/perch aim, axolotl water-follow, etc.)
 
 ---
 

@@ -1,0 +1,31 @@
+{
+  "parent": "wildbound:root",
+  "display": {
+    "icon": { "id": "minecraft:lead" },
+    "title": { "text": "The Wild Knows Your Name" },
+    "description": { "text": "Not a single creature could resist you." },
+    "frame": "challenge",
+    "show_toast": true,
+    "announce_to_chat": true
+  },
+  "criteria": {
+    "bat": { "trigger": "wildbound:companion_tamed", "conditions": { "animal_type": "minecraft:bat" } },
+    "rabbit": { "trigger": "wildbound:companion_tamed", "conditions": { "animal_type": "minecraft:rabbit" } },
+    "fox": { "trigger": "wildbound:companion_tamed", "conditions": { "animal_type": "minecraft:fox" } },
+    "frog": { "trigger": "wildbound:companion_tamed", "conditions": { "animal_type": "minecraft:frog" } },
+    "axolotl": { "trigger": "wildbound:companion_tamed", "conditions": { "animal_type": "minecraft:axolotl" } },
+    "bee": { "trigger": "wildbound:companion_tamed", "conditions": { "animal_type": "minecraft:bee" } },
+    "panda": { "trigger": "wildbound:companion_tamed", "conditions": { "animal_type": "minecraft:panda" } },
+    "armadillo": { "trigger": "wildbound:companion_tamed", "conditions": { "animal_type": "minecraft:armadillo" } }
+  },
+  "requirements": [
+    ["bat"],
+    ["rabbit"],
+    ["fox"],
+    ["frog"],
+    ["axolotl"],
+    ["bee"],
+    ["panda"],
+    ["armadillo"]
+  ]
+}

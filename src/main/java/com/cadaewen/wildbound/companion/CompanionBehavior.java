@@ -6,8 +6,10 @@ import net.minecraft.core.Holder;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.effect.MobEffect;
+import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.phys.AABB;
 
 /**
  * Shared runtime logic for every companion: ownership/sit state access, and the per-tick driver that
@@ -37,6 +39,20 @@ public final class CompanionBehavior {
     public static Player getOwner(Mob mob) {
         UUID uuid = getOwnerUuid(mob);
         return uuid == null ? null : mob.level().getPlayerByUUID(uuid);
+    }
+
+    /** True if {@code owner} has a following (non-sitting) companion of {@code type} within follow range. */
+    public static boolean hasActiveCompanion(Player owner, EntityType<?> type) {
+        AABB box = owner.getBoundingBox().inflate(
+                CompanionType.FOLLOW_RANGE, CompanionType.FOLLOW_RANGE, CompanionType.FOLLOW_RANGE);
+        for (Mob mob : owner.level().getEntitiesOfClass(Mob.class, box, m -> m.getType() == type)) {
+            if (isCompanion(mob) && !isSitting(mob)
+                    && owner.getUUID().equals(getOwnerUuid(mob))
+                    && mob.distanceToSqr(owner) <= CompanionType.FOLLOW_RANGE_SQR) {
+                return true;
+            }
+        }
+        return false;
     }
 
     public static void tame(Mob mob, Player owner) {
