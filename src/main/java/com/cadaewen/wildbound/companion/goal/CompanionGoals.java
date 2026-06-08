@@ -4,6 +4,7 @@ import com.cadaewen.wildbound.mixin.MobAccessor;
 
 import net.minecraft.world.entity.PathfinderMob;
 import net.minecraft.world.entity.ai.goal.GoalSelector;
+import net.minecraft.world.entity.ai.goal.MoveTowardsRestrictionGoal;
 
 /**
  * Attaches the shared companion goals to a goal-driven mob. Called once per entity load (see the
@@ -21,5 +22,9 @@ public final class CompanionGoals {
         goals.addGoal(0, new CompanionSitGoal(mob));
         goals.addGoal(0, new CompanionFollowOwnerGoal(mob, 1.2, 7.0F, 2.5F, 16.0F));
         goals.addGoal(0, new CompanionTickGoal(mob));
+        // Wander leash: walks the mob back when it drifts outside its home-point restriction. Dormant
+        // unless a restriction is set, which only happens in WANDER (see CompanionBehavior.syncWanderLeash).
+        // Priority 5 so it sits below follow/sit but above vanilla idle wandering.
+        goals.addGoal(5, new MoveTowardsRestrictionGoal(mob, 1.0));
     }
 }

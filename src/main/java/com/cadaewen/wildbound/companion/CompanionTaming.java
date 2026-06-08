@@ -89,6 +89,11 @@ public final class CompanionTaming {
             next = mode == CompanionMode.SIT ? CompanionMode.FOLLOW : CompanionMode.SIT;
         }
         CompanionBehavior.setMode(mob, next);
+        // Anchor the wander leash to wherever the companion is told to wander (the sit spot, in the usual
+        // sit-then-wander flow). The leash itself is applied each tick from this anchor.
+        if (next == CompanionMode.WANDER) {
+            CompanionBehavior.setWanderAnchor(mob, mob.blockPosition());
+        }
     }
 
     private static void spawnParticles(ServerLevel level, Mob mob, SimpleParticleType particle) {

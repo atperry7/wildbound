@@ -6,6 +6,7 @@ import com.cadaewen.wildbound.Wildbound;
 
 import net.fabricmc.fabric.api.attachment.v1.AttachmentRegistry;
 import net.fabricmc.fabric.api.attachment.v1.AttachmentType;
+import net.minecraft.core.BlockPos;
 import net.minecraft.core.UUIDUtil;
 import net.minecraft.resources.Identifier;
 
@@ -24,6 +25,13 @@ public final class WildboundAttachments {
     /** Behaviour mode (follow / sit / wander). Absent means {@link CompanionMode#FOLLOW}. */
     public static final AttachmentType<CompanionMode> MODE = AttachmentRegistry.createPersistent(
             Identifier.fromNamespaceAndPath(Wildbound.MOD_ID, "mode"), CompanionMode.CODEC);
+
+    /**
+     * The spot a {@link CompanionMode#WANDER}ing companion is leashed to (set when wander is enabled).
+     * Persistent so the leash survives a reload; the live vanilla restriction is re-applied from it each tick.
+     */
+    public static final AttachmentType<BlockPos> WANDER_ANCHOR = AttachmentRegistry.createPersistent(
+            Identifier.fromNamespaceAndPath(Wildbound.MOD_ID, "wander_anchor"), BlockPos.CODEC);
 
     private WildboundAttachments() {
     }

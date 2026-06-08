@@ -31,6 +31,9 @@ public abstract class CompanionType {
     public static final double FOLLOW_RANGE = 24.0;
     public static final double FOLLOW_RANGE_SQR = FOLLOW_RANGE * FOLLOW_RANGE;
 
+    /** How far a wandering companion may drift from its anchor before it's pulled back. */
+    public static final int WANDER_LEASH_RADIUS = 12;
+
     /** The vanilla item used to tame this animal (also the representative item for tag-based tamers). */
     public abstract Item tamingItem();
 

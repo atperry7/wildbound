@@ -109,6 +109,11 @@ Still open:
   bat returns `false` from `serverTickBehavior` in WANDER (handing flight to vanilla). **Verify in-client:**
   the held-item lane is still reserved for the future buff-off toggle (see next item). *Best-effort —
   in-game pass still wanted for wander movement feel per-animal.*
+  - **Wander leash (12 blocks).** ✅ Entering WANDER anchors the companion to that spot (`WANDER_ANCHOR`
+    attachment); goal mobs use vanilla's home-point (`setHomeTo` + `MoveTowardsRestrictionGoal`), the bat
+    steers itself back (`BatCompanion.leashWander`). So a wandering pet stays in a ~12-block bubble and
+    doesn't get lost. *Possible follow-ups:* expose the radius per mob in the config; the bat's leash is a
+    3D sphere (pulls back on height too) — fine, but verify it doesn't feel jittery at the boundary.
 
 ## How to use this file
 

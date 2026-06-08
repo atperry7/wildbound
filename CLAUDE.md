@@ -40,6 +40,12 @@ the mob on taming. This keeps entity identity stable and avoids renderer/attribu
   `isFollowing`/`isSitting`/`isWandering` — **`isFollowing` also checks `isCompanion`** because `getMode`
   defaults any mob (even untamed) to `FOLLOW`. Only `FOLLOW` is "active" (grants the passive); `WANDER`
   roams on vanilla AI, still owned (persists, won't flee, won't be hunted by other companions).
+  - **Wander leash** — entering WANDER stores a `WANDER_ANCHOR` (BlockPos, persistent). Goal mobs are kept
+    near it by vanilla's home-point system: `CompanionBehavior.syncWanderLeash` re-applies `Mob.setHomeTo`
+    each tick (vanilla doesn't persist the home, our anchor does) and a `MoveTowardsRestrictionGoal` walks
+    them back past `WANDER_LEASH_RADIUS` (12). The **bat** has no goals, so it leashes itself in
+    `BatCompanion.leashWander` (steer back when outside the radius, else cede to vanilla flight). NB the
+    home-point API is on `Mob` and named `setHomeTo`/`hasHome`/`getHomePosition`/`clearHome` this version.
 - **Per-animal definition** — subclass `CompanionType` (taming item/predicate, passive effect + amplifier,
   taming chance, sit-pose hooks) and register it in `CompanionRegistry` keyed by `EntityType`. Amplifier and
   taming chance are mutable fields with config setters (see Config below); the rest is behaviour.

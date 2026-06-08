@@ -2,12 +2,14 @@ package com.cadaewen.wildbound.companion;
 
 import java.util.UUID;
 
+import net.minecraft.core.BlockPos;
 import net.minecraft.core.Holder;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.effect.MobEffect;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.Mob;
+import net.minecraft.world.entity.PathfinderMob;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.phys.AABB;
 
@@ -53,6 +55,15 @@ public final class CompanionBehavior {
 
     public static UUID getOwnerUuid(Mob mob) {
         return mob.getAttached(WildboundAttachments.OWNER);
+    }
+
+    /** The spot a wandering companion is leashed to, or null if none is set. */
+    public static BlockPos getWanderAnchor(Mob mob) {
+        return mob.getAttached(WildboundAttachments.WANDER_ANCHOR);
+    }
+
+    public static void setWanderAnchor(Mob mob, BlockPos anchor) {
+        mob.setAttached(WildboundAttachments.WANDER_ANCHOR, anchor);
     }
 
     public static Player getOwner(Mob mob) {
@@ -102,7 +113,31 @@ public final class CompanionBehavior {
         CompanionMode mode = getMode(mob);
 
         refreshPassive(mob, type, owner, mode);
+        syncWanderLeash(mob, mode);
         return type.serverTickBehavior(mob, level, owner, mode);
+    }
+
+    /**
+     * Keeps a goal-driven companion's vanilla home-point restriction in sync with its mode: a wandering
+     * companion is leashed to its anchor (re-applied every tick so it survives reload, where vanilla does
+     * not persist the restriction), and any other mode clears it. The {@code MoveTowardsRestrictionGoal}
+     * attached at load then walks the mob back whenever it drifts past {@link CompanionType#WANDER_LEASH_RADIUS}.
+     *
+     * <p>Only {@link PathfinderMob}s have this restriction system — the bat leashes itself in
+     * {@link CompanionType#serverTickBehavior} instead.
+     */
+    private static void syncWanderLeash(Mob mob, CompanionMode mode) {
+        if (!(mob instanceof PathfinderMob pathfinder)) {
+            return;
+        }
+        BlockPos anchor = getWanderAnchor(mob);
+        if (mode == CompanionMode.WANDER && anchor != null) {
+            if (!pathfinder.hasHome() || !pathfinder.getHomePosition().equals(anchor)) {
+                pathfinder.setHomeTo(anchor, CompanionType.WANDER_LEASH_RADIUS);
+            }
+        } else if (pathfinder.hasHome()) {
+            pathfinder.clearHome();
+        }
     }
 
     /**

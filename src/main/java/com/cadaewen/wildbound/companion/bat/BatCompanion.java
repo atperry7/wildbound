@@ -1,5 +1,6 @@
 package com.cadaewen.wildbound.companion.bat;
 
+import com.cadaewen.wildbound.companion.CompanionBehavior;
 import com.cadaewen.wildbound.companion.CompanionMode;
 import com.cadaewen.wildbound.companion.CompanionType;
 
@@ -30,6 +31,8 @@ public class BatCompanion extends CompanionType {
     private static final double PREFERRED_DISTANCE = 4.0;
     private static final double PREFERRED_DISTANCE_SQR = PREFERRED_DISTANCE * PREFERRED_DISTANCE;
     private static final double TELEPORT_DISTANCE_SQR = 20.0 * 20.0;
+    private static final double LEASH_RADIUS_SQR =
+            (double) CompanionType.WANDER_LEASH_RADIUS * CompanionType.WANDER_LEASH_RADIUS;
     private static final int CEILING_SEARCH = 5;
     private static final int GROUND_SEARCH = 8;
 
@@ -48,13 +51,8 @@ public class BatCompanion extends CompanionType {
         if (!(mob instanceof Bat bat)) {
             return false;
         }
-        // Wander: hand the bat back to vanilla flight. Clear any lingering rest from a prior sit so it
-        // doesn't stay pinned (vanilla would eventually wake it, but this avoids a beat of stuck resting).
         if (mode == CompanionMode.WANDER) {
-            if (bat.isResting()) {
-                bat.setResting(false);
-            }
-            return false;
+            return leashWander(bat);
         }
         if (mode == CompanionMode.SIT || owner == null) {
             hangOrHover(bat, level);
@@ -115,15 +113,48 @@ public class BatCompanion extends CompanionType {
 
         double dxOwner = targetX - bat.getX();
         double dzOwner = targetZ - bat.getZ();
-        Vec3 m = bat.getDeltaMovement();
 
         if (dxOwner * dxOwner + dzOwner * dzOwner <= PREFERRED_DISTANCE_SQR) {
             // Close enough: ease horizontal drift, just track the owner's height.
+            Vec3 m = bat.getDeltaMovement();
             double dy = targetY - bat.getY();
             bat.setDeltaMovement(m.x * 0.6, m.y + (Math.signum(dy) * 0.3 - m.y) * 0.1, m.z * 0.6);
             return;
         }
 
+        approachPoint(bat, targetX, targetY, targetZ);
+    }
+
+    /**
+     * Wander mode: roam on vanilla flight, but stay within {@link CompanionType#WANDER_LEASH_RADIUS} of the
+     * anchor. Inside the bubble we cede to vanilla (return {@code false}); once the bat drifts outside we
+     * steer it back and cancel vanilla for the tick (return {@code true}).
+     */
+    private boolean leashWander(Bat bat) {
+        BlockPos anchor = CompanionBehavior.getWanderAnchor(bat);
+        if (anchor == null) {
+            if (bat.isResting()) {
+                bat.setResting(false);
+            }
+            return false;
+        }
+        double cx = anchor.getX() + 0.5;
+        double cy = anchor.getY() + 1.0;
+        double cz = anchor.getZ() + 0.5;
+        if (bat.distanceToSqr(cx, cy, cz) <= LEASH_RADIUS_SQR) {
+            if (bat.isResting()) {
+                bat.setResting(false);
+            }
+            return false;
+        }
+        bat.setResting(false);
+        approachPoint(bat, cx, cy, cz);
+        return true;
+    }
+
+    /** Nudge the bat's velocity toward a target point and face it (vanilla-style flight steering). */
+    private void approachPoint(Bat bat, double targetX, double targetY, double targetZ) {
+        Vec3 m = bat.getDeltaMovement();
         double dx = targetX - bat.getX();
         double dy = targetY - bat.getY();
         double dz = targetZ - bat.getZ();
