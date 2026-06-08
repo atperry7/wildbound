@@ -11,7 +11,8 @@
 >
 > **Revision note (v1.1, post-roster):** Two further changes since the roster filled out:
 > 4. **State is a tri-state `CompanionMode` enum (FOLLOW / SIT / WANDER), not a `SITTING` boolean.** WANDER lets an owned companion roam on vanilla AI with no passive. Empty-hand RC toggles SIT↔FOLLOW; sneak+empty-hand RC toggles WANDER↔FOLLOW. Only FOLLOW is "active" for passives. Wherever this doc says `SITTING` / "sit toggle," read `MODE` / "mode toggle."
-> 5. **Per-mob config.** `config/wildbound.json` (hand-rolled, generated from defaults) sets each mob's `enabled`, `tamingChanceOneInN`, and `effectAmplifier`. Internal mechanics (flicker-safe effect duration / reapply interval, follow range) stay non-configurable on purpose. Disabling gates new taming only; existing companions persist.
+> 5. **Per-mob config.** `config/wildbound.json` (hand-rolled, generated from defaults) sets each mob's `enabled`, `tamingChanceOneInN`, `effectAmplifier`, and `wanderRadius`. Internal mechanics (flicker-safe effect duration / reapply interval, follow range) stay non-configurable on purpose. Disabling gates new taming only; existing companions persist.
+> 6. **Wander leash + advancement.** Setting a companion to WANDER anchors it to that spot and keeps it within `wanderRadius` (vanilla home-point for goal mobs, self-steer for the bat). A "Home on the Range" advancement fires on first wander to teach the control.
 
 ## Build & Mappings
 

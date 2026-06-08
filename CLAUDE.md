@@ -43,9 +43,10 @@ the mob on taming. This keeps entity identity stable and avoids renderer/attribu
   - **Wander leash** — entering WANDER stores a `WANDER_ANCHOR` (BlockPos, persistent). Goal mobs are kept
     near it by vanilla's home-point system: `CompanionBehavior.syncWanderLeash` re-applies `Mob.setHomeTo`
     each tick (vanilla doesn't persist the home, our anchor does) and a `MoveTowardsRestrictionGoal` walks
-    them back past `WANDER_LEASH_RADIUS` (12). The **bat** has no goals, so it leashes itself in
-    `BatCompanion.leashWander` (steer back when outside the radius, else cede to vanilla flight). NB the
-    home-point API is on `Mob` and named `setHomeTo`/`hasHome`/`getHomePosition`/`clearHome` this version.
+    them back past the per-mob `CompanionType.wanderLeashRadius()` (default 12, config-overridable). The
+    **bat** has no goals, so it leashes itself in `BatCompanion.leashWander` (steer back when outside the
+    radius, else cede to vanilla flight). NB the home-point API is on `Mob` and named
+    `setHomeTo`/`hasHome`/`getHomePosition`/`clearHome` this version.
 - **Per-animal definition** — subclass `CompanionType` (taming item/predicate, passive effect + amplifier,
   taming chance, sit-pose hooks) and register it in `CompanionRegistry` keyed by `EntityType`. Amplifier and
   taming chance are mutable fields with config setters (see Config below); the rest is behaviour.
@@ -56,9 +57,11 @@ the mob on taming. This keeps entity identity stable and avoids renderer/attribu
   stay free for future per-companion actions. Taming is gated by `CompanionRegistry.isEnabled`.
 - **Config** — `config/WildboundConfig.java` reads `config/wildbound.json` once at init (generated from
   defaults if missing) and applies per-mob `enabled` (→ `CompanionRegistry.setEnabled`), `tamingChanceOneInN`,
-  and `effectAmplifier`. Flicker constants and follow range are deliberately **not** configurable.
-- **Advancements** — custom `CompanionTamedTrigger` (`advancement/`), registered as
-  `wildbound:companion_tamed` in `registry/ModCriteria`, fired from `CompanionTaming` on success. JSON in
+  `effectAmplifier`, and `wanderRadius` (→ the matching `CompanionType` setters, all clamped). Flicker
+  constants and follow range are deliberately **not** configurable.
+- **Advancements** — custom triggers in `advancement/`, registered in `registry/ModCriteria` and fired from
+  `CompanionTaming`: `CompanionTamedTrigger` (`wildbound:companion_tamed`, on a successful tame) and
+  `CompanionWanderedTrigger` (`wildbound:companion_wandered`, when a companion is first set to wander). JSON in
   `src/main/resources/data/wildbound/advancement/` (folder is singular `advancement` this version).
 
 ### Movement: two paths

@@ -1,0 +1,18 @@
+{
+  "parent": "wildbound:root",
+  "display": {
+    "icon": { "id": "minecraft:compass" },
+    "title": { "text": "Home on the Range" },
+    "description": { "text": "Sneak and use on a companion to send it wandering nearby." },
+    "show_toast": true,
+    "announce_to_chat": true
+  },
+  "criteria": {
+    "wandered": {
+      "trigger": "wildbound:companion_wandered"
+    }
+  },
+  "requirements": [
+    ["wandered"]
+  ]
+}

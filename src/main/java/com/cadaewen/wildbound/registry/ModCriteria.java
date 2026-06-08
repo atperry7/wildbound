@@ -2,6 +2,7 @@ package com.cadaewen.wildbound.registry;
 
 import com.cadaewen.wildbound.Wildbound;
 import com.cadaewen.wildbound.advancement.CompanionTamedTrigger;
+import com.cadaewen.wildbound.advancement.CompanionWanderedTrigger;
 
 import net.minecraft.core.Registry;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -14,6 +15,11 @@ public final class ModCriteria {
             BuiltInRegistries.TRIGGER_TYPES,
             Identifier.fromNamespaceAndPath(Wildbound.MOD_ID, "companion_tamed"),
             new CompanionTamedTrigger());
+
+    public static final CompanionWanderedTrigger COMPANION_WANDERED = Registry.register(
+            BuiltInRegistries.TRIGGER_TYPES,
+            Identifier.fromNamespaceAndPath(Wildbound.MOD_ID, "companion_wandered"),
+            new CompanionWanderedTrigger());
 
     private ModCriteria() {
     }

@@ -45,7 +45,10 @@ public final class CompanionTaming {
                 return InteractionResult.PASS;
             }
             if (!level.isClientSide()) {
-                toggleMode(mob, player.isShiftKeyDown());
+                CompanionMode newMode = toggleMode(mob, player.isShiftKeyDown());
+                if (newMode == CompanionMode.WANDER && player instanceof ServerPlayer serverPlayer) {
+                    ModCriteria.COMPANION_WANDERED.trigger(serverPlayer);
+                }
             }
             return InteractionResult.SUCCESS;
         }
@@ -80,7 +83,7 @@ public final class CompanionTaming {
      * Plain right-click toggles between {@link CompanionMode#SIT} and {@link CompanionMode#FOLLOW};
      * sneak right-click toggles between {@link CompanionMode#WANDER} and {@link CompanionMode#FOLLOW}.
      */
-    private static void toggleMode(Mob mob, boolean sneaking) {
+    private static CompanionMode toggleMode(Mob mob, boolean sneaking) {
         CompanionMode mode = CompanionBehavior.getMode(mob);
         CompanionMode next;
         if (sneaking) {
@@ -94,6 +97,7 @@ public final class CompanionTaming {
         if (next == CompanionMode.WANDER) {
             CompanionBehavior.setWanderAnchor(mob, mob.blockPosition());
         }
+        return next;
     }
 
     private static void spawnParticles(ServerLevel level, Mob mob, SimpleParticleType particle) {
