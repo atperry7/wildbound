@@ -59,6 +59,24 @@ Still open:
 - If your *only* companion dies (vs. sits), the effect also lingers to natural expiry, since a dead
   entity can't refresh or clear. Optional: a death hook for prompt clear.
 
+## Advancements
+
+- **Hint the taming item in each advancement.** Per-animal advancement descriptions are currently
+  flavour text ("The dark does not frighten you anymore."). Add a hint of the item used to tame, so the
+  tree doubles as a guide — e.g. append "(Spider Eye)" / "Tame a bat with a Spider Eye", or a second
+  description line. Easy: edit the `description` in each `data/wildbound/advancement/*.json`.
+
+- **Capstone tree wiring — wants all animals to lead into "The Wild Knows Your Name".** Today the tree
+  fans out: `root` → 7 animal advancements + the capstone, all siblings of `root`. The capstone already
+  *requires* all 8 types (its criteria/requirements), so it's functionally the "tame everything" goal —
+  but visually it only connects to `root`.
+  - **Constraint:** Minecraft advancements are **single-parent** — you cannot have all 7 draw lines into
+    the capstone. So "all point to the big one" isn't literally possible in the tree.
+  - **Options to consider:** (a) leave as-is — capstone is a `root` child, requirements already gate it;
+    (b) chain it after a specific animal so it reads as an endpoint (arbitrary); (c) move the per-animal
+    advancements under a sub-node and place the capstone as the visible culmination off that node. Pick
+    the layout, then it's just `parent` edits in the JSON.
+
 ## Indicators
 
 - **Effect-pet HUD icon** — now ON (showIcon=true, particles off). The seven status-effect companions
