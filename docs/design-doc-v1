@@ -211,7 +211,7 @@ The Bat companion is the first to be implemented. All shared framework code shou
 | Taming item | Spider Eye |
 | Passive effect | Night Vision I |
 | Follow | Velocity steering toward a point just above the owner's head; teleports if left >20 blocks behind |
-| Sit | Rises to the nearest sturdy ceiling within 5 blocks and hangs (reusing vanilla `setResting(true)`); hovers in place if none found |
+| Sit | Prefers a sturdy ceiling within 5 blocks (hangs, reusing vanilla `setResting(true)`); else perches on the ground within 8 blocks below; hovers in place only if neither is in reach |
 
 ### Why the Bat can't use goals
 

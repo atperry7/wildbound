@@ -12,13 +12,14 @@ loop works; these make it feel better. Grouped loosely; not strictly ordered.
     separation nudge when two companions are within ~1 block; stagger follow heights.
   - Source: `BatCompanion.followOwner` in `companion/bat/BatCompanion.java`.
 
-- **Hard to get bats to perch where you want.** Sit-to-ceiling rises to the *nearest* sturdy block
-  within 5 blocks straight up; players can't aim it, and "hover in place" when no ceiling feels
-  floaty.
-  - *Ideas:* search a small cone/radius rather than straight up; prefer the block the player is
-    looking at; snap to the owner's targeted block face; tune hover damping so a no-ceiling sit
-    settles instead of drifting.
-  - Source: `BatCompanion.hangOrHover` / `findCeiling` in `companion/bat/BatCompanion.java`.
+- **Hard to aim where a bat perches.** Sit now prefers a ceiling overhead, falls back to perching on
+  the ground below, and only hovers when neither is in reach (over a drop). But the player still can't
+  *aim* it — it picks the nearest surface straight up/down, not the block they're looking at.
+  - *Ideas:* search a small cone/radius rather than a straight column; prefer the block the player is
+    looking at; snap to the owner's targeted block face.
+  - Source: `BatCompanion.hangOrHover` / `findSurface` in `companion/bat/BatCompanion.java`.
+  - *Note:* ground-perch floats ~0.1 block above the surface (vanilla resting pins to `floor(y)+0.1`).
+    Negligible, but if it bugs us, drive a non-resting grounded pose instead.
 
 ## Effect lifecycle (accepted trade-offs, revisit only if they annoy in practice)
 
