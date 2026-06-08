@@ -36,6 +36,13 @@ Sit poses now wired:
   control vs. our descent, and whether it lands cleanly vs. bobbing).
 
 Still open:
+- **Wild predators still hunt tamed prey.** `MobCanAttackMixin` only stops a *companion* from attacking
+  another *companion* (fixed: companion fox no longer kills the owner's rabbit). A *wild* fox/wolf can
+  still hunt a tamed rabbit/companion. *Idea:* optionally protect companions from all non-owned attackers,
+  or make tamed prey not match predator targeting selectors.
+- **Fox bonus indicator is per-gain only.** A green sparkle shows on the fox when it doubles XP, but there
+  is no persistent "bonus active" cue like the status-effect companions' inventory icon. *Idea:* a subtle
+  persistent indicator (e.g. faint periodic particle while a fox follows), or surface it in a future HUD.
 - **Axolotl follow on land** — amphibious, so following on land is a slow flop, and the follow-teleport
   (`canStandAt` wants air over solid) can strand it out of water. *Idea:* prefer water teleport targets.
 - **Armadillo follow** — may still curl up mid-follow if it senses a threat (sprinting player). Cosmetic;

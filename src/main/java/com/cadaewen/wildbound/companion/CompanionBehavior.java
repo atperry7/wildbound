@@ -43,16 +43,21 @@ public final class CompanionBehavior {
 
     /** True if {@code owner} has a following (non-sitting) companion of {@code type} within follow range. */
     public static boolean hasActiveCompanion(Player owner, EntityType<?> type) {
+        return findActiveCompanion(owner, type) != null;
+    }
+
+    /** The nearest following (non-sitting) companion of {@code type} owned by {@code owner} in range, or null. */
+    public static Mob findActiveCompanion(Player owner, EntityType<?> type) {
         AABB box = owner.getBoundingBox().inflate(
                 CompanionType.FOLLOW_RANGE, CompanionType.FOLLOW_RANGE, CompanionType.FOLLOW_RANGE);
         for (Mob mob : owner.level().getEntitiesOfClass(Mob.class, box, m -> m.getType() == type)) {
             if (isCompanion(mob) && !isSitting(mob)
                     && owner.getUUID().equals(getOwnerUuid(mob))
                     && mob.distanceToSqr(owner) <= CompanionType.FOLLOW_RANGE_SQR) {
-                return true;
+                return mob;
             }
         }
-        return false;
+        return null;
     }
 
     public static void tame(Mob mob, Player owner) {

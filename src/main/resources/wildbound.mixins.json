@@ -6,6 +6,7 @@
 		"AvoidEntityGoalMixin",
 		"BatMixin",
 		"MobAccessor",
+		"MobCanAttackMixin",
 		"ServerPlayerExperienceMixin"
 	],
 	"injectors": {
