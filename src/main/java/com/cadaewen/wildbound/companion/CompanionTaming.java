@@ -49,7 +49,7 @@ public final class CompanionTaming {
         }
 
         // Taming attempt: holding the right item on an untamed animal.
-        if (!tamed && held.is(type.tamingItem())) {
+        if (!tamed && type.isTamingItem(held)) {
             if (level.isClientSide()) {
                 return InteractionResult.SUCCESS;
             }

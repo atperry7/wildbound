@@ -1,0 +1,19 @@
+{
+  "parent": "wildbound:root",
+  "display": {
+    "icon": { "id": "minecraft:spider_eye" },
+    "title": { "text": "Rolled Over" },
+    "description": { "text": "It decided you were worth uncurling for." },
+    "show_toast": true,
+    "announce_to_chat": true
+  },
+  "criteria": {
+    "tamed_armadillo": {
+      "trigger": "wildbound:companion_tamed",
+      "conditions": { "animal_type": "minecraft:armadillo" }
+    }
+  },
+  "requirements": [
+    ["tamed_armadillo"]
+  ]
+}

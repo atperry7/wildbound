@@ -21,6 +21,23 @@ loop works; these make it feel better. Grouped loosely; not strictly ordered.
   - *Note:* ground-perch floats ~0.1 block above the surface (vanilla resting pins to `floor(y)+0.1`).
     Negligible, but if it bugs us, drive a non-resting grounded pose instead.
 
+## Roster movement quirks (new companions, accepted for now)
+
+These ride the generic goal-based path (follow via navigation, sit stops navigation). Works, but each
+has a vanilla-behaviour wrinkle worth a later look:
+
+- **Axolotl** — amphibious. Following on land is a slow flop, and the follow-teleport lands it on dry
+  ground (`canStandAt` wants air over a solid block), which can strand it out of water. *Idea:* prefer
+  water for teleport targets; maybe only follow when the owner is in/near water.
+- **Bee** — flying. Follow works via flying navigation, but "sit" just stops navigation, so it hovers
+  rather than landing/settling. *Idea:* a small land-and-idle behaviour for flying companions on sit.
+- **Armadillo** — rolls up when it senses a threat (e.g. player sprinting nearby); a following armadillo
+  may curl mid-follow. Cosmetic; *idea:* suppress the threat-roll for companions, like the flee-suppress.
+- **Frog** — jump-follows fine; its tongue will still snatch nearby slimes/small mobs. Probably fine as
+  characterful, but note it eats baby mobs.
+- **Sit pose** — ground companions just stop in place (no vanilla "sitting" pose like a wolf). Reads as
+  "standing still." A real sit/lie pose would need per-animal pose handling.
+
 ## Effect lifecycle (accepted trade-offs, revisit only if they annoy in practice)
 
 - Sitting your *last* companion leaves the passive effect lingering up to ~16s (no active teardown,
@@ -28,6 +45,26 @@ loop works; these make it feel better. Grouped loosely; not strictly ordered.
   confusing.
 - If your *only* companion dies (vs. sits), the effect also lingers to natural expiry, since a dead
   entity can't refresh or clear. Optional: a death hook for prompt clear.
+
+## Companion modes / interactions
+
+- **"Wander" mode (third mode beyond follow/sit).** Toggle with **shift + right-click** (sneak + use)
+  on a tamed companion. In wander mode the animal roams freely on its vanilla AI — it does *not*
+  follow, does *not* stay sitting, and grants **no passive effect**. It stays owned (persists, doesn't
+  despawn, doesn't flee its owner). Use case: letting tamed animals mill around a base/pen as living
+  decoration without buffing or trailing the player.
+  - *Implementation sketch:*
+    - State is currently a `SITTING` boolean. Promote to a tri-state mode (FOLLOW / SIT / WANDER) —
+      e.g. an enum attachment, or add a `WANDER` boolean alongside `SITTING`.
+    - Interaction: empty-hand right-click keeps toggling sit/follow (`CompanionTaming`); add a
+      sneak-right-click branch that toggles WANDER. Read sneak via `player.isShiftKeyDown()`.
+    - Passive effect: `CompanionBehavior.refreshPassive` should only apply in FOLLOW (wander = inactive,
+      same as sit — it already just stops refreshing).
+    - Goals: `CompanionFollowOwnerGoal` / `CompanionSitGoal` `canUse` must be false in WANDER so vanilla
+      goals take over; the bat's `serverTickBehavior` should return `false` (let vanilla fly) in WANDER.
+    - Keep `setPersistenceRequired` and the no-flee behavior regardless of mode.
+  - Touches: `WildboundAttachments`, `CompanionBehavior`, `CompanionTaming`, `BatCompanion`,
+    `CompanionFollowOwnerGoal`, `CompanionSitGoal`.
 
 ## How to use this file
 

@@ -1,0 +1,19 @@
+{
+  "parent": "wildbound:root",
+  "display": {
+    "icon": { "id": "minecraft:tropical_fish" },
+    "title": { "text": "Below the Surface" },
+    "description": { "text": "The deep is no longer off limits." },
+    "show_toast": true,
+    "announce_to_chat": true
+  },
+  "criteria": {
+    "tamed_axolotl": {
+      "trigger": "wildbound:companion_tamed",
+      "conditions": { "animal_type": "minecraft:axolotl" }
+    }
+  },
+  "requirements": [
+    ["tamed_axolotl"]
+  ]
+}

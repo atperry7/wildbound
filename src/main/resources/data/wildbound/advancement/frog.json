@@ -1,0 +1,19 @@
+{
+  "parent": "wildbound:root",
+  "display": {
+    "icon": { "id": "minecraft:slime_ball" },
+    "title": { "text": "Leap of Faith" },
+    "description": { "text": "Every landing is softer now." },
+    "show_toast": true,
+    "announce_to_chat": true
+  },
+  "criteria": {
+    "tamed_frog": {
+      "trigger": "wildbound:companion_tamed",
+      "conditions": { "animal_type": "minecraft:frog" }
+    }
+  },
+  "requirements": [
+    ["tamed_frog"]
+  ]
+}

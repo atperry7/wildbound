@@ -8,6 +8,7 @@ import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
 
 /**
  * Describes one tameable animal. Adding a companion means subclassing this and registering it in
@@ -30,8 +31,13 @@ public abstract class CompanionType {
     public static final double FOLLOW_RANGE = 24.0;
     public static final double FOLLOW_RANGE_SQR = FOLLOW_RANGE * FOLLOW_RANGE;
 
-    /** The vanilla item used to tame this animal. */
+    /** The vanilla item used to tame this animal (also the representative item for tag-based tamers). */
     public abstract Item tamingItem();
+
+    /** Whether the given held stack can tame this animal. Override for tag-based items (e.g. any flower). */
+    public boolean isTamingItem(ItemStack stack) {
+        return stack.is(tamingItem());
+    }
 
     /** Status effect granted while following, or {@code null} for special-case companions (e.g. Fox XP). */
     public abstract Holder<MobEffect> passiveEffect();

@@ -1,0 +1,19 @@
+{
+  "parent": "wildbound:root",
+  "display": {
+    "icon": { "id": "minecraft:bamboo" },
+    "title": { "text": "Unhurried" },
+    "description": { "text": "Patience has its rewards." },
+    "show_toast": true,
+    "announce_to_chat": true
+  },
+  "criteria": {
+    "tamed_panda": {
+      "trigger": "wildbound:companion_tamed",
+      "conditions": { "animal_type": "minecraft:panda" }
+    }
+  },
+  "requirements": [
+    ["tamed_panda"]
+  ]
+}

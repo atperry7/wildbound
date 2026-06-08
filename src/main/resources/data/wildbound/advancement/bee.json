@@ -1,0 +1,19 @@
+{
+  "parent": "wildbound:root",
+  "display": {
+    "icon": { "id": "minecraft:poppy" },
+    "title": { "text": "Busy as a Bee" },
+    "description": { "text": "Their energy is infectious." },
+    "show_toast": true,
+    "announce_to_chat": true
+  },
+  "criteria": {
+    "tamed_bee": {
+      "trigger": "wildbound:companion_tamed",
+      "conditions": { "animal_type": "minecraft:bee" }
+    }
+  },
+  "requirements": [
+    ["tamed_bee"]
+  ]
+}

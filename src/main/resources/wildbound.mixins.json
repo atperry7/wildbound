@@ -5,8 +5,7 @@
 	"mixins": [
 		"AvoidEntityGoalMixin",
 		"BatMixin",
-		"MobAccessor",
-		"RabbitMixin"
+		"MobAccessor"
 	],
 	"injectors": {
 		"defaultRequire": 1
