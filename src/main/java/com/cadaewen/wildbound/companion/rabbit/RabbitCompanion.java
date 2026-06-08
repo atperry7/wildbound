@@ -12,8 +12,8 @@ import net.minecraft.world.item.Items;
  * Rabbit companion: tamed with a Dandelion, grants Jump Boost I while following.
  *
  * <p>Unlike the bat, the rabbit drives movement through the vanilla goal system, so it adds no movement
- * override here — its follow/sit goals are attached in {@code RabbitMixin}, and the shared tick (passive
- * effect) runs via {@code CompanionTickGoal}.
+ * override here — its follow/sit goals are attached generically on entity load (see {@code CompanionGoals}),
+ * and the shared tick (passive effect) runs via {@code CompanionTickGoal}.
  */
 public class RabbitCompanion extends CompanionType {
 
