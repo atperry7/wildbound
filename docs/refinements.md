@@ -58,7 +58,30 @@ Still open:
 - If your *only* companion dies (vs. sits), the effect also lingers to natural expiry, since a dead
   entity can't refresh or clear. Optional: a death hook for prompt clear.
 
+## Indicators
+
+- **Effect-pet HUD icon** — now ON (showIcon=true, particles off). The seven status-effect companions
+  show their effect icon while their buff is active. ✅
+- **Fox HUD indicator** — the fox has no status effect, so it can't show an effect icon; right now it
+  only sparkles green when it doubles XP. Idea: give the fox a persistent "active" cue similar to an
+  effect icon — e.g. a **custom green XP-bonus MobEffect** used purely as an indicator. ⚠️ *Tension:* a
+  custom effect is a new effect, which crosses the design doc's "vanilla items/effects only" rule. Decide
+  whether the indicator is worth that exception, or settle for a non-effect cue (periodic faint particle
+  while a fox follows, or a future custom HUD widget). No vanilla effect is a clean no-op indicator (Luck
+  affects loot, etc.).
+
 ## Companion modes / interactions
+
+- **"Buff off, still following" toggle.** Let the player keep a pet following but turn its passive OFF —
+  e.g. hold an item and **sneak + right-click**. Useful when they want the companion around but not the
+  effect (avoid effect clutter, or save it for when needed).
+  - *Implementation sketch:* a per-companion `buffEnabled` flag (attachment, default true). When false,
+    `CompanionBehavior.refreshPassive` skips applying (and `FoxXpBonus`/`hasActiveCompanion` treat it as
+    inactive). Follow/sit behaviour unchanged.
+  - *Interaction collision:* this and the "wander" idea both want sneak+right-click. Need ONE coherent
+    interaction map. Proposal to pin down: empty-hand RC = sit/follow toggle (current); sneak + empty-hand
+    RC = cycle/secondary mode; held-item interactions reserved (taming already uses held item on untamed).
+    Resolve before implementing either, so controls stay predictable.
 
 - **"Wander" mode (third mode beyond follow/sit).** Toggle with **shift + right-click** (sneak + use)
   on a tamed companion. In wander mode the animal roams freely on its vanilla AI — it does *not*

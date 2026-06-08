@@ -87,7 +87,10 @@ public abstract class CompanionType {
         if (effect == null) {
             return;
         }
-        // ambient = true, visible = false: no particles, clean HUD — only the inventory effect icon shows.
-        owner.addEffect(new MobEffectInstance(effect, EFFECT_DURATION_TICKS, passiveAmplifier(), true, false), null);
+        // ambient = true (gentle border), particles off, icon ON — the HUD/inventory effect icon is the
+        // indicator that the companion's buff is active. NOTE: the 5-arg constructor sets showIcon = visible,
+        // so we must use the 6-arg form to keep the icon while suppressing particles.
+        owner.addEffect(
+                new MobEffectInstance(effect, EFFECT_DURATION_TICKS, passiveAmplifier(), true, false, true), null);
     }
 }
