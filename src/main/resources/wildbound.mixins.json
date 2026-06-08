@@ -5,6 +5,7 @@
 	"mixins": [
 		"AvoidEntityGoalMixin",
 		"BatMixin",
+		"FoxAccessor",
 		"MobAccessor",
 		"MobCanAttackMixin",
 		"ServerPlayerExperienceMixin"

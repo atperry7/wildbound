@@ -31,6 +31,7 @@ Sit poses now wired:
 - **Armadillo** — rolls into a ball on sit (vanilla scared state, which peeks periodically on its own). ✅
 - **Axolotl** — the "wandered while sitting" bug is fixed (sit goal now zeroes residual horizontal
   velocity each tick, needed for swimmers). ✅
+- **Fox** — lies down on sit (vanilla sleeping pose, via a `setSleeping` invoker). ✅
 - **Bee** — no vanilla rest-pose flag exists, so sit makes it fly down and land on the ground
   (`controlsSitMovement` + `onSitTick`). **Best-effort — verify in-game; may need tuning** (flying move
   control vs. our descent, and whether it lands cleanly vs. bobbing).
