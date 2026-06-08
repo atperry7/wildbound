@@ -1,9 +1,15 @@
 package com.cadaewen.wildbound;
 
 import net.fabricmc.api.ModInitializer;
+import net.fabricmc.fabric.api.event.player.UseEntityCallback;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.cadaewen.wildbound.companion.CompanionRegistry;
+import com.cadaewen.wildbound.companion.CompanionTaming;
+import com.cadaewen.wildbound.companion.WildboundAttachments;
+import com.cadaewen.wildbound.registry.ModCriteria;
 
 public class Wildbound implements ModInitializer {
 	public static final String MOD_ID = "wildbound";
@@ -15,10 +21,11 @@ public class Wildbound implements ModInitializer {
 
 	@Override
 	public void onInitialize() {
-		// This code runs as soon as Minecraft is in a mod-load-ready state.
-		// However, some things (like resources) may still be uninitialized.
-		// Proceed with mild caution.
+		WildboundAttachments.init();
+		ModCriteria.init();
+		CompanionRegistry.init();
+		UseEntityCallback.EVENT.register(CompanionTaming::onUseEntity);
 
-		LOGGER.info("Hello Fabric world!");
+		LOGGER.info("Wildbound initialised with {} companion type(s).", CompanionRegistry.count());
 	}
 }

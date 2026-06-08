@@ -3,7 +3,10 @@
 	"package": "com.cadaewen.wildbound.mixin",
 	"compatibilityLevel": "JAVA_25",
 	"mixins": [
-		"ExampleMixin"
+		"AvoidEntityGoalMixin",
+		"BatMixin",
+		"MobAccessor",
+		"RabbitMixin"
 	],
 	"injectors": {
 		"defaultRequire": 1

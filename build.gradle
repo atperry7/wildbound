@@ -24,12 +24,21 @@ loom {
 		}
 	}
 
+	runs {
+		client {
+			// Pin a stable dev username so the offline player UUID is constant across launches.
+			// By default the dev client picks a random "Player###" each launch, giving a different
+			// UUID every time — which breaks owner-bound features (companion sit/stand stops working
+			// after you reload a saved world, because the stored owner no longer matches you).
+			programArgs("--username", "WildboundDev")
+		}
+	}
 }
 
 dependencies {
 	// To change the versions see the gradle.properties file
 	minecraft "com.mojang:minecraft:${project.minecraft_version}"
-	
+
 	implementation "net.fabricmc:fabric-loader:${project.loader_version}"
 
 	// Fabric API. This is technically optional, but you probably want it anyway.

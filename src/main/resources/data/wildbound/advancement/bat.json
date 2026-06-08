@@ -1,0 +1,19 @@
+{
+  "parent": "wildbound:root",
+  "display": {
+    "icon": { "id": "minecraft:spider_eye" },
+    "title": { "text": "Wing and a Prayer" },
+    "description": { "text": "The dark does not frighten you anymore." },
+    "show_toast": true,
+    "announce_to_chat": true
+  },
+  "criteria": {
+    "tamed_bat": {
+      "trigger": "wildbound:companion_tamed",
+      "conditions": { "animal_type": "minecraft:bat" }
+    }
+  },
+  "requirements": [
+    ["tamed_bat"]
+  ]
+}

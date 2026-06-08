@@ -1,0 +1,19 @@
+{
+  "parent": "wildbound:root",
+  "display": {
+    "icon": { "id": "minecraft:dandelion" },
+    "title": { "text": "Quick and Quiet" },
+    "description": { "text": "It let you get close." },
+    "show_toast": true,
+    "announce_to_chat": true
+  },
+  "criteria": {
+    "tamed_rabbit": {
+      "trigger": "wildbound:companion_tamed",
+      "conditions": { "animal_type": "minecraft:rabbit" }
+    }
+  },
+  "requirements": [
+    ["tamed_rabbit"]
+  ]
+}

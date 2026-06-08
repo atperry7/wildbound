@@ -1,0 +1,270 @@
+# Wildbound — Mod Design Document
+**Platform:** Java Edition · Fabric
+**Target Version:** 26.1.2
+**Mod ID:** `wildbound`
+**Description:** A vanilla+ Fabric mod that allows players to tame passive mobs that have never been tameable before. Each companion grants a passive bonus to their owner while following — a gentle reward for the bond between player and animal. Taming uses only items already found in vanilla Minecraft.
+
+> **Revision note (v1, as built):** During Bat implementation we revised three original assumptions. They are reflected inline below and summarized here:
+> 1. **No parallel entity types.** Tamed state is *attached to the vanilla mob* via the Fabric Attachment API rather than registering `Tamed*Entity` types and swapping the mob on taming. Less code per animal, stable entity identity, no renderer wiring.
+> 2. **No active effect teardown.** Following companions refresh the passive effect; sitting / out-of-range companions simply stop and let it fade. This avoids one companion cancelling another's shared effect and scales flat to hundreds of companions.
+> 3. **Bat AI is velocity-steered, not goal-based.** Vanilla `Bat` bypasses the goal system, so follow/sit are driven from `customServerAiStep`, reusing the bat's native resting state to hang from ceilings.
+
+## Build & Mappings
+
+Target MC ships **de-obfuscated** (native Mojang names), so Loom uses no mappings declaration — `loom.officialMojangMappings()` is rejected with *"Cannot use Mojang mappings in a non-obfuscated environment."* All vanilla references in this document use Yarn-style names for readability, but the code uses Mojang names (e.g. `mobInteract`→`Mob`/no mixin needed, `TameableEntity`→`TamableAnimal`, `removeStatusEffect`→`removeEffect`, `Identifier` rather than `ResourceLocation`).
+
+---
+
+## Design Philosophy
+
+Wildbound should feel like a natural extension of vanilla's existing taming systems. Every decision must:
+
+- Use only vanilla items, sounds, particles, and mechanics — no new items, no new crafting
+- Piggyback on existing `TameableEntity` patterns so the behavior feels familiar
+- Be balanced — the passive effects are useful but low-level, never replacing potions or gear
+- Respect each animal's existing vanilla identity (diet, habitat, behavior)
+- Be architecturally extensible — adding a new companion should require minimal new code
+
+---
+
+## Companion Roster
+
+This is the intended full roster. The **Bat** is the first implementation target. Others are listed for architectural planning purposes.
+
+| Animal | Taming Item | Passive Effect (Following) |
+|---|---|---|
+| Bat | Spider Eye | Night Vision I |
+| Rabbit | Dandelion | Jump Boost I |
+| Fox | Sweet Berries | XP Bonus x2 |
+| Frog | Slimeball | Slow Falling I |
+| Axolotl | Tropical Fish (item) | Water Breathing I |
+| Bee | Any Flower | Haste I |
+| Panda | Bamboo | Regeneration I |
+| Armadillo | Spider Eye | Resistance I |
+
+> ⚠️ **Fox — Special Case:** There is no vanilla potion effect for XP gain. The Fox companion's passive is a **custom mechanic** (not a status effect) and is the only exception to the standard effect system. See the Fox Passive section below for details.
+
+---
+
+## Architecture — The Companion Framework
+
+All tamed animals share a common abstract base. This allows new companions to be added by implementing only a small set of animal-specific values, while all shared logic (following, sitting, ownership, effect application) lives in one place.
+
+### Companion definitions: `CompanionType` + attachments
+
+We do **not** subclass vanilla entities. Tamed state lives on the existing mob as Fabric **attachments**, and each animal's tuning lives in a `CompanionType` looked up by entity type. A wild bat and a tamed bat are the *same* entity instance — taming just attaches an owner.
+
+**Shared state (Fabric Attachment API, persistent):**
+- `OWNER` — owner player UUID. Its presence is what marks a mob as a companion (so "tamed" is not a separate flag).
+- `SITTING` — sit/follow toggle (absent / `false` = following).
+
+**Shared logic (framework, animal-agnostic):**
+- `CompanionTaming` — taming + sit toggle via Fabric `UseEntityCallback` (no per-animal interact mixin).
+- `CompanionBehavior.serverTick(mob)` — per-tick driver: refreshes the passive effect for active companions and delegates movement to the `CompanionType`.
+- Attachment persistence is automatic (save/load handled by the Attachment API).
+
+**Per-animal definition — subclass `CompanionType` and register it:**
+
+| Member | Purpose |
+|---|---|
+| `tamingItem()` | The vanilla `Item` used for taming |
+| `passiveEffect()` | `Holder<MobEffect>` granted while following, or `null` for special-case companions (Fox) |
+| `passiveAmplifier()` | Amplifier (default 0 = Level I) |
+| `tamingChanceOneInN()` | 1-in-N success chance (default 3) |
+| `applyPassiveBonus(ServerPlayer)` | Default grants the status effect; Fox-style companions override |
+| `serverTickBehavior(mob, level, owner, sitting)` | Per-tick movement override; return `true` to cancel the mob's vanilla AI step. Used where a mob needs custom follow/sit handling |
+
+### Movement strategy per animal
+
+Most ground animals *do* use the goal system, so future companions can add a `FollowOwnerGoal` / `SitWhenOrderedToGoal` from `serverTickBehavior` (or a small goal-injecting mixin) and return `false`. The **Bat is special**: it bypasses goals entirely (see Bat section), so its `serverTickBehavior` steers velocity directly and returns `true`.
+
+---
+
+## Passive Effect System
+
+### How It Works
+
+The passive effect system runs in `CompanionBehavior.serverTick`, called from each companion's AI-step hook. Individual companions implement no tick logic.
+
+**While the companion is FOLLOWING (and the owner is within 24 blocks):**
+- Every 5 seconds (100 ticks) it (re)applies `passiveEffect()` at `passiveAmplifier()` with a **16-second (320-tick)** duration, `ambient = true`, `visible = false`
+- Refreshing a 320-tick effect every 100 ticks keeps the remaining time oscillating between 220 and 320 ticks — always above Night Vision's ~200-tick end-of-effect *flicker window*, so an active effect never strobes. (The original 7s/140-tick plan would have flickered permanently.)
+- `visible = false` keeps the HUD clean — only the inventory effect icon shows
+
+**When the companion stops being active (SIT, owner out of range, or unloaded):**
+- It simply **stops refreshing**. The effect then fades on its own (≤16s). There is **no active removal call.**
+- Rationale: a player may keep many companions. Per-companion teardown either (a) makes a sitting companion cancel an effect a *following* companion is still sustaining, or (b) requires a per-tick scan to check for other providers. Letting the effect lapse naturally avoids both — it scales flat to hundreds of companions and is self-correcting (the last active provider's refresh is simply the last one that lands).
+
+**Important constraints:**
+- Effect amplifier is always 0 (Level I) — never higher, by design
+- Effects are intentionally "background" — the weakest tier of the effect family
+- Multiple companions granting the same effect don't stack — they all refresh the same single effect instance
+- **Trade-off:** sitting your *last* companion leaves the effect lingering up to its duration (~16s, with vanilla's normal wear-off flicker in the final 10s). Accepted as a fair cost for the performance and correctness wins above.
+
+### Effect Reference by Companion
+
+| Companion | Effect | Why It Fits |
+|---|---|---|
+| Bat | Night Vision I | Bats navigate in the dark; your bat extends that sense to you |
+| Rabbit | Jump Boost I | Rabbits leap; being around one makes you nimble |
+| Fox | **XP Bonus x2** ⚠️ | Foxes waste nothing; their cunning sharpens what you learn from every encounter |
+| Frog | Slow Falling I | Frogs absorb impact; their instinct transfers to you near ledges |
+| Axolotl | Water Breathing I | Aquatic companion; allows sustained underwater presence |
+| Bee | Haste I | Bees are tireless workers; their energy is contagious |
+| Panda | Regeneration I | Pandas are resilient and unhurried; their calm presence slowly restores you |
+| Armadillo | Resistance I | Armadillos curl into armor; their presence fortifies you |
+
+### Fox — XP Bonus (Special Mechanic)
+
+Because there is no vanilla potion effect for XP gain, the Fox passive is implemented as a custom event hook rather than a status effect. It is the only companion that works this way.
+
+**Implementation approach:**
+- Hook into the `LivingEntity` experience drop event (Fabric API: `ServerLivingEntityEvents` or equivalent)
+- Hook into the block break XP drop event
+- When the event fires, check if the player has a following (non-sitting) tamed Fox within 24 blocks
+- If so, multiply the XP drop amount by **x2** before it is applied
+- This is a one-time multiplier per drop event, not a stacking buff
+- Does not apply when the fox is sitting
+
+---
+
+## Taming System
+
+### Shared Taming Flow
+
+All companions use the same interaction flow, implemented once in `CompanionTaming` (wired to Fabric `UseEntityCallback`). No special environmental conditions are required — consistent with how vanilla taming works for wolves, cats, and horses.
+
+1. Player right-clicks a registered companion animal while holding the correct `tamingItem()`
+2. Consume one item from the player's hand (unless creative mode)
+3. Roll `tamingChanceOneInN()` — on failure, smoke particles play; on success, heart particles play
+4. On success: **attach the `OWNER` (player UUID) to the same entity.** No despawn/respawn — the wild mob simply becomes a companion in place, keeping its identity, age, and any name tag
+
+---
+
+## Shared Behavior Post-Taming
+
+All companions share these behaviors regardless of animal type:
+
+### Follow Mode
+- Companions use `FollowOwnerGoal` (with movement-type-aware variants where needed)
+- Preferred follow distance: 3–5 blocks behind the owner
+- Maximum follow distance before teleport: 20 blocks
+- Teleport target: a valid air block near the owner, respecting the companion's movement type (ground vs. flight)
+- Companions do not path into hazardous blocks (fire, lava, cactus, etc.)
+
+### Sit Mode
+- Right-click the companion with an empty hand to toggle sit/follow
+- In sit mode: companion stays in place, does not follow, passive effect deactivates
+- Sitting state persists through chunk unload/reload
+- Sitting companions never despawn
+
+### Death & Respawn
+- Tamed companions do not respawn on death — they are gone permanently, like vanilla tamed wolves before the respawn update
+- Death message: *"[Player]'s [Animal] died"* using vanilla pet death message system
+
+### Naming
+- Standard vanilla Name Tag behavior — name displays above the companion
+
+---
+
+## Mixin Strategy
+
+Wildbound uses the **minimum possible mixins**. Taming itself needs **none** — Fabric `UseEntityCallback` detects the right-click for every animal at once. A mixin is only needed where a vanilla mob doesn't drive its movement through the goal system and we must intercept its custom AI step.
+
+| Mixin Target | Purpose |
+|---|---|
+| `Bat#customServerAiStep` | Hand a tamed bat to the companion framework (follow/sit + effect) and cancel vanilla wandering. Required because `Bat` ignores the goal system |
+| *(ground animals)* | *(expected: none — add `FollowOwnerGoal`/`SitWhenOrderedToGoal` from `serverTickBehavior`, or a small goal-injecting mixin if a mob doesn't expose its goal selector)* |
+
+No interaction or entity-conversion mixins are required.
+
+---
+
+## Advancements
+
+All advancements use a single shared criterion trigger `wildbound:companion_tamed` that fires with the animal type as a parameter. Per-animal advancements are children of *"Wildbound"*. The capstone is a child of *"Wildbound"* and requires all others to have been earned.
+
+| Advancement | Trigger | Description | Parent |
+|---|---|---|---|
+| *"Wildbound"* | Tame any companion for the first time | *"Earned the trust of a wild creature."* | — |
+| *"Wing and a Prayer"* | Tame a bat | *"The dark does not frighten you anymore."* | Wildbound |
+| *"Quick and Quiet"* | Tame a rabbit | *"It let you get close."* | Wildbound |
+| *"Fox Friend"* | Tame a fox | *"They usually don't trust anyone."* | Wildbound |
+| *"Leap of Faith"* | Tame a frog | *"Every landing is softer now."* | Wildbound |
+| *"Below the Surface"* | Tame an axolotl | *"The deep is no longer off limits."* | Wildbound |
+| *"Busy as a Bee"* | Tame a bee | *"Their energy is infectious."* | Wildbound |
+| *"Unhurried"* | Tame a panda | *"Patience has its rewards."* | Wildbound |
+| *"Rolled Over"* | Tame an armadillo | *"It decided you were worth uncurling for."* | Wildbound |
+| *"The Wild Knows Your Name"* | Tame one of every companion type | *"Not a single creature could resist you."* | Wildbound |
+
+---
+
+## First Implementation Target — Bat
+
+### Summary
+The Bat companion is the first to be implemented. All shared framework code should be written with the Bat as the proof-of-concept, then verified to be fully extensible before moving to the next animal.
+
+### Bat-Specific Values
+
+| Property | Value |
+|---|---|
+| Taming item | Spider Eye |
+| Passive effect | Night Vision I |
+| Follow | Velocity steering toward a point just above the owner's head; teleports if left >20 blocks behind |
+| Sit | Rises to the nearest sturdy ceiling within 5 blocks and hangs (reusing vanilla `setResting(true)`); hovers in place if none found |
+
+### Why the Bat can't use goals
+
+Vanilla `Bat` extends `AmbientCreature` and registers **no movement goals** — its flight is hand-rolled in `customServerAiStep` (random `targetPosition` wandering), and resting pins its position in `tick()`. A `FollowOwnerGoal` would be ignored. So `BatCompanion.serverTickBehavior` (invoked via the `Bat#customServerAiStep` mixin) steers `deltaMovement` directly, mirroring vanilla's own movement math, and toggles the native resting flag for the ceiling-hang sit pose. There is no `BatFollowOwnerGoal` or `BatSitOnCeilingGoal` class.
+
+### Implementation Order / Status
+1. ✅ `WildboundAttachments` (OWNER, SITTING) + `CompanionType` contract
+2. ✅ Shared `CompanionTaming` (UseEntityCallback) + `CompanionBehavior` tick driver
+3. ✅ `BatCompanion` (the first concrete `CompanionType`)
+4. ✅ `BatMixin` on `customServerAiStep` (only mixin needed)
+5. ✅ Compiles; dedicated server boots and the mixin applies cleanly
+6. ✅ Advancements + the `wildbound:companion_tamed` criterion trigger (root + bat + rabbit)
+7. ✅ Rabbit companion added — validated the framework extends to a goal-based ground animal
+8. ☐ Remaining roster (Fox, Frog, Axolotl, Bee, Panda, Armadillo) + capstone advancement
+
+---
+
+## Out of Scope
+
+Deliberately excluded to maintain vanilla+ feel and scope:
+
+- New taming items — vanilla items only
+- Companion breeding
+- Companion equipment or inventory
+- Companion combat abilities
+- GUI for companion stats
+- Shoulder riding
+- Any companion that is already tameable in vanilla (wolves, cats, horses, parrots, etc.)
+- Hostile or neutral mobs (only passive mobs are in scope)
+
+---
+
+## Proposed File Structure Reference
+
+```
+wildbound/
+├── src/main/java/com/cadaewen/wildbound/
+│   ├── Wildbound.java                      # Init: attachments, registry, UseEntityCallback
+│   ├── companion/
+│   │   ├── WildboundAttachments.java       # OWNER + SITTING attachment types
+│   │   ├── CompanionType.java              # Per-animal contract + default effect application
+│   │   ├── CompanionRegistry.java          # EntityType -> CompanionType
+│   │   ├── CompanionBehavior.java          # Shared per-tick driver (effect + movement delegation)
+│   │   ├── CompanionTaming.java            # UseEntityCallback: tame + sit toggle
+│   │   └── bat/
+│   │       └── BatCompanion.java           # Spider Eye -> Night Vision; follow/teleport/ceiling-hang
+│   └── mixin/
+│       └── BatMixin.java                   # Bat#customServerAiStep hook
+├── src/main/resources/
+│   ├── fabric.mod.json
+│   ├── wildbound.mixins.json
+│   └── data/wildbound/                     # (deferred) advancements/ for the companion_tamed criterion
+└── build.gradle                            # no mappings line — MC ships de-obfuscated
+```
+
+> No `assets/.../entity` textures or models, and no `ModEntities`/renderer registration: companions reuse the vanilla entity entirely.

@@ -3,9 +3,9 @@
 	"id": "wildbound",
 	"version": "${version}",
 	"name": "Wildbound",
-	"description": "This is an example description! Tell everyone what your mod is about!",
+	"description": "A vanilla+ mod that lets you tame passive mobs never tameable before. Each companion grants a gentle passive bonus while it follows you.",
 	"authors": [
-		"Me!"
+		"Cadaewen"
 	],
 	"contact": {
 		"homepage": "https://fabricmc.net/",
