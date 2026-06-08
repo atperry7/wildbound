@@ -61,10 +61,9 @@ Still open:
 
 ## Advancements
 
-- **Hint the taming item in each advancement.** Per-animal advancement descriptions are currently
-  flavour text ("The dark does not frighten you anymore."). Add a hint of the item used to tame, so the
-  tree doubles as a guide — e.g. append "(Spider Eye)" / "Tame a bat with a Spider Eye", or a second
-  description line. Easy: edit the `description` in each `data/wildbound/advancement/*.json`.
+- **Taming-item hint — covered by the icon.** ✅ Each per-animal advancement's icon *is* its taming item
+  (bat = spider eye, panda = bamboo, ...), so the badge already hints what to use. Only nuance: the **Bee**
+  icon is a poppy but taming accepts *any* flower — clarify in its description only if it proves confusing.
 
 - **Capstone tree wiring — wants all animals to lead into "The Wild Knows Your Name".** Today the tree
   fans out: `root` → 7 animal advancements + the capstone, all siblings of `root`. The capstone already
