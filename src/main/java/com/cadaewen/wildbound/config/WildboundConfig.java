@@ -41,6 +41,7 @@ public final class WildboundConfig {
     private static final String KEY_ENABLED = "enabled";
     private static final String KEY_TAMING_CHANCE = "tamingChanceOneInN";
     private static final String KEY_AMPLIFIER = "effectAmplifier";
+    private static final String KEY_WANDER_RADIUS = "wanderRadius";
 
     private WildboundConfig() {
     }
@@ -89,6 +90,9 @@ public final class WildboundConfig {
             if (entry.has(KEY_AMPLIFIER)) {
                 companion.setPassiveAmplifier(entry.get(KEY_AMPLIFIER).getAsInt());
             }
+            if (entry.has(KEY_WANDER_RADIUS)) {
+                companion.setWanderLeashRadius(entry.get(KEY_WANDER_RADIUS).getAsInt());
+            }
         } catch (RuntimeException e) {
             Wildbound.LOGGER.warn("Bad config entry for \"{}\" in {} — keeping defaults for it.", id, FILE_NAME, e);
         }
@@ -103,13 +107,15 @@ public final class WildboundConfig {
             entry.addProperty(KEY_ENABLED, true);
             entry.addProperty(KEY_TAMING_CHANCE, companion.tamingChanceOneInN());
             entry.addProperty(KEY_AMPLIFIER, companion.passiveAmplifier());
+            entry.addProperty(KEY_WANDER_RADIUS, companion.wanderLeashRadius());
             companions.add(id.toString(), entry);
         }
 
         JsonObject root = new JsonObject();
         root.addProperty("_comment", "Wildbound per-mob settings. enabled gates new taming (existing pets "
                 + "persist); tamingChanceOneInN is 1-in-N odds (1 = always); effectAmplifier is the buff "
-                + "level (0 = I) and is ignored for the fox, whose passive is an XP bonus.");
+                + "level (0 = I) and is ignored for the fox, whose passive is an XP bonus; wanderRadius is "
+                + "how far a wandering companion may roam from where you set it (blocks).");
         root.add(KEY_COMPANIONS, companions);
 
         try {

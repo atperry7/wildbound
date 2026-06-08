@@ -113,7 +113,7 @@ public final class CompanionBehavior {
         CompanionMode mode = getMode(mob);
 
         refreshPassive(mob, type, owner, mode);
-        syncWanderLeash(mob, mode);
+        syncWanderLeash(mob, type, mode);
         return type.serverTickBehavior(mob, level, owner, mode);
     }
 
@@ -121,19 +121,19 @@ public final class CompanionBehavior {
      * Keeps a goal-driven companion's vanilla home-point restriction in sync with its mode: a wandering
      * companion is leashed to its anchor (re-applied every tick so it survives reload, where vanilla does
      * not persist the restriction), and any other mode clears it. The {@code MoveTowardsRestrictionGoal}
-     * attached at load then walks the mob back whenever it drifts past {@link CompanionType#WANDER_LEASH_RADIUS}.
+     * attached at load then walks the mob back whenever it drifts past {@link CompanionType#wanderLeashRadius}.
      *
      * <p>Only {@link PathfinderMob}s have this restriction system — the bat leashes itself in
      * {@link CompanionType#serverTickBehavior} instead.
      */
-    private static void syncWanderLeash(Mob mob, CompanionMode mode) {
+    private static void syncWanderLeash(Mob mob, CompanionType type, CompanionMode mode) {
         if (!(mob instanceof PathfinderMob pathfinder)) {
             return;
         }
         BlockPos anchor = getWanderAnchor(mob);
         if (mode == CompanionMode.WANDER && anchor != null) {
             if (!pathfinder.hasHome() || !pathfinder.getHomePosition().equals(anchor)) {
-                pathfinder.setHomeTo(anchor, CompanionType.WANDER_LEASH_RADIUS);
+                pathfinder.setHomeTo(anchor, type.wanderLeashRadius());
             }
         } else if (pathfinder.hasHome()) {
             pathfinder.clearHome();

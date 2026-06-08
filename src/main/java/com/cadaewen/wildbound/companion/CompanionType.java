@@ -31,8 +31,8 @@ public abstract class CompanionType {
     public static final double FOLLOW_RANGE = 24.0;
     public static final double FOLLOW_RANGE_SQR = FOLLOW_RANGE * FOLLOW_RANGE;
 
-    /** How far a wandering companion may drift from its anchor before it's pulled back. */
-    public static final int WANDER_LEASH_RADIUS = 12;
+    /** Default leash radius (blocks) for a wandering companion. Per-mob config may change it. */
+    public static final int DEFAULT_WANDER_LEASH_RADIUS = 12;
 
     /** The vanilla item used to tame this animal (also the representative item for tag-based tamers). */
     public abstract Item tamingItem();
@@ -53,6 +53,7 @@ public abstract class CompanionType {
 
     private int passiveAmplifier = DEFAULT_AMPLIFIER;
     private int tamingChanceOneInN = DEFAULT_TAMING_CHANCE_ONE_IN_N;
+    private int wanderLeashRadius = DEFAULT_WANDER_LEASH_RADIUS;
 
     /** Effect amplifier (0 = Level I). Configurable per mob. */
     public int passiveAmplifier() {
@@ -72,6 +73,16 @@ public abstract class CompanionType {
     /** Config hook: set the taming odds; clamped to {@code >= 1} (guaranteed if 1). */
     public void setTamingChanceOneInN(int oneInN) {
         this.tamingChanceOneInN = Math.max(1, oneInN);
+    }
+
+    /** How far this companion may drift from its anchor while wandering before it's pulled back. */
+    public int wanderLeashRadius() {
+        return wanderLeashRadius;
+    }
+
+    /** Config hook: set the wander leash radius; clamped to {@code >= 1}. */
+    public void setWanderLeashRadius(int radius) {
+        this.wanderLeashRadius = Math.max(1, radius);
     }
 
     /**

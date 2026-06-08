@@ -31,8 +31,6 @@ public class BatCompanion extends CompanionType {
     private static final double PREFERRED_DISTANCE = 4.0;
     private static final double PREFERRED_DISTANCE_SQR = PREFERRED_DISTANCE * PREFERRED_DISTANCE;
     private static final double TELEPORT_DISTANCE_SQR = 20.0 * 20.0;
-    private static final double LEASH_RADIUS_SQR =
-            (double) CompanionType.WANDER_LEASH_RADIUS * CompanionType.WANDER_LEASH_RADIUS;
     private static final int CEILING_SEARCH = 5;
     private static final int GROUND_SEARCH = 8;
 
@@ -126,7 +124,7 @@ public class BatCompanion extends CompanionType {
     }
 
     /**
-     * Wander mode: roam on vanilla flight, but stay within {@link CompanionType#WANDER_LEASH_RADIUS} of the
+     * Wander mode: roam on vanilla flight, but stay within {@link CompanionType#wanderLeashRadius} of the
      * anchor. Inside the bubble we cede to vanilla (return {@code false}); once the bat drifts outside we
      * steer it back and cancel vanilla for the tick (return {@code true}).
      */
@@ -141,7 +139,8 @@ public class BatCompanion extends CompanionType {
         double cx = anchor.getX() + 0.5;
         double cy = anchor.getY() + 1.0;
         double cz = anchor.getZ() + 0.5;
-        if (bat.distanceToSqr(cx, cy, cz) <= LEASH_RADIUS_SQR) {
+        double radius = wanderLeashRadius();
+        if (bat.distanceToSqr(cx, cy, cz) <= radius * radius) {
             if (bat.isResting()) {
                 bat.setResting(false);
             }
