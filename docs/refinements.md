@@ -10,18 +10,7 @@ not tasks.
 
 ## Active — ready to work
 
-- **Fox fetch edges** · `fox`
-  The fox pathfinds to the nearest item (`FoxFetchItemGoal`) and acts as a ~1.5-block *mobile magnet*
-  centred on itself — items in the bubble go to the owner via `playerTouch`; its `canPickUpLoot` is off so
-  it can't pocket them. A `STUCK_TICKS` + `BLACKLIST_TICKS` backstop (counting down only after navigation
-  is *done*) covers genuinely walled-off items. Remaining rough spots:
-  - [ ] **(a) Full inventory** makes `playerTouch` a no-op, so the fox keeps re-targeting an item it can't
-    deposit. *Idea:* skip items the owner's inventory can't accept. · S
-  - [ ] **(b) Freshly-thrown items** — it chases one and waits out the ~2s pickup delay rather than
-    ignoring it until pickable. *Idea:* defer targeting until the pickup delay clears. · S
-  - *Knob (not a task):* `PICKUP_RADIUS` (1.5) is an internal feel value, deliberately not in config —
-    adjust in code if grabbing reads as too magnet-y.
-  → `companion/fox/FoxFetchItemGoal.java`
+_(none open)_
 
 ## Needs a decision
 

@@ -78,6 +78,17 @@ Natural per-animal pose on sit, via `CompanionType` hooks driven by `CompanionSi
   owner. Frog (in-water mod 0.02) and turtle (slow by default) were already slow enough to leave alone.
   `CompanionGoals` + `AxolotlCompanion.followSpeed`. ✅
 
+## Passives
+
+- **Fox fetch only commits to deliverable loot** — play-tested in-client. The fox-fetch goal
+  (`FoxFetchItemGoal`) now filters its target search (and drops a target mid-chase) by two conditions via a
+  new `ownerCanAccept` helper and vanilla `ItemEntity.hasPickUpDelay`: it won't target loot the owner's
+  inventory can't hold (a free slot or a partial stack with room) — a full-inventory owner's fox investigates,
+  finds no room, and moves on, picking the item up the moment a slot frees — and it ignores a freshly-thrown
+  item until its pickup delay clears instead of running over and waiting it out. Follow (priority 0) still
+  outranks fetch, so a fox that can't deposit just trails the owner rather than getting stuck. No new
+  mixins/registration — pure goal logic. `companion/fox/FoxFetchItemGoal.java`. ✅
+
 ## Mounts
 
 - **Sheep mount: charged jump + water float** — play-tested in-client. A full jump charge lands the rider on

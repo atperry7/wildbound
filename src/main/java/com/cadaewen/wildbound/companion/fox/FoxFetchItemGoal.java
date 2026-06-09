@@ -11,7 +11,9 @@ import com.cadaewen.wildbound.companion.CompanionType;
 import net.minecraft.world.entity.PathfinderMob;
 import net.minecraft.world.entity.ai.goal.Goal;
 import net.minecraft.world.entity.item.ItemEntity;
+import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.phys.AABB;
 
 /**
@@ -71,8 +73,11 @@ public class FoxFetchItemGoal extends Goal {
 
     @Override
     public boolean canContinueToUse() {
+        // active() runs first in the chain so owner is set before ownerCanAccept reads it; if the owner's
+        // inventory fills mid-chase, drop the target rather than keep running at undeliverable loot.
         return target != null && target.isAlive() && !target.getItem().isEmpty()
-                && active() && mob.distanceToSqr(target) <= SEARCH_RADIUS_SQR;
+                && active() && ownerCanAccept(target.getItem())
+                && mob.distanceToSqr(target) <= SEARCH_RADIUS_SQR;
     }
 
     @Override
@@ -168,13 +173,30 @@ public class FoxFetchItemGoal extends Goal {
         return true;
     }
 
+    /**
+     * Whether the owner's inventory can take this stack — a free slot, or a partial stack of the same item
+     * with room to top up ({@code getSlotWithRemainingSpace} handles the stack-matching). Guards the fox
+     * against chasing loot that {@code playerTouch} would only bounce off a full inventory.
+     */
+    private boolean ownerCanAccept(ItemStack stack) {
+        if (owner == null) {
+            return false;
+        }
+        Inventory inventory = owner.getInventory();
+        return inventory.getFreeSlot() >= 0 || inventory.getSlotWithRemainingSpace(stack) >= 0;
+    }
+
     private ItemEntity nearestItem() {
         long now = mob.level().getGameTime();
         blacklist.values().removeIf(eligibleAt -> eligibleAt <= now);
 
+        // Only chase loot worth chasing: skip items still in their pickup-delay window (a freshly thrown
+        // item the fox would otherwise run to and wait out) and items the owner's inventory can't hold (a
+        // full inventory makes playerTouch a no-op, so the fox would lock onto loot it can never deposit).
         AABB box = mob.getBoundingBox().inflate(SEARCH_RADIUS);
         List<ItemEntity> items = mob.level().getEntitiesOfClass(ItemEntity.class, box,
-                item -> item.isAlive() && !item.getItem().isEmpty());
+                item -> item.isAlive() && !item.getItem().isEmpty()
+                        && !item.hasPickUpDelay() && ownerCanAccept(item.getItem()));
         ItemEntity nearest = null;
         double best = Double.MAX_VALUE;
         for (ItemEntity item : items) {
