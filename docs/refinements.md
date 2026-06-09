@@ -10,13 +10,6 @@ not tasks.
 
 ## Active — ready to work
 
-- [ ] **Bats stack on top of each other when following** · `bat` · M
-  Multiple following bats converge on the same target (just above the owner's head) and overlap — one
-  briefly vanished inside another. Every bat steers toward an identical point with no separation.
-  *Idea:* per-bat orbit offset seeded by entity id; a light separation nudge under ~1 block; staggered
-  follow heights.
-  → `companion/bat/BatCompanion.java` · `followOwner`
-
 - **Fox fetch edges** · `fox`
   The fox pathfinds to the nearest item (`FoxFetchItemGoal`) and acts as a ~1.5-block *mobile magnet*
   centred on itself — items in the bubble go to the owner via `playerTouch`; its `canPickUpLoot` is off so
@@ -43,17 +36,6 @@ not tasks.
   *Idea:* shared "aquatic follow" helper for axolotl + turtle.
   → `companion/turtle/TurtleCompanion.java`
 
-## Verify in-game
-
-- **Sheep mount: charged jump + water float** `[subsystem: sheep] [S]` — compiles and loads clean
-  (headless `runServer` applies `SheepMixin`'s new `PlayerRideableJumping` and merges the
-  `can_float_while_ridden` tag with no errors), but needs an in-client pass:
-  - Confirm a **full** jump charge reliably lands the rider onto a **two-block** ledge (impulse
-    `WILDBOUND_JUMP_STRENGTH = 0.6` in `SheepMixin`; bump if it falls short, trim if it overshoots).
-    Check the charge bar shows while mounted and a tap gives a low hop, not a launch.
-  - Confirm riding into water **bobs to the surface and paddles across** (slower than on land) instead of
-    sinking, and that a free-roaming companion sheep is unaffected (vanilla water behaviour).
-
 ## Needs a decision
 
 _(none open)_
@@ -78,3 +60,8 @@ When something is "good enough for now," jot it under **Active** (or the right s
 pointer and a one-line fix sketch, then move on. Pull items into a refinement pass later. When one ships,
 move its entry to [`completed-refinements.md`](completed-refinements.md), rewritten to say what was built —
 this file holds **open items only**.
+
+A feature isn't "shipped" until it's verified complete, and for gameplay/visual behaviour verification
+**includes the in-client pass** — there's no separate "verify in-game" parking lot. If a change compiles and
+loads but still needs a play-test, it's not done: keep it under **Active** (note the pending play-test in its
+sketch) until the client pass confirms it, then move it to the archive.

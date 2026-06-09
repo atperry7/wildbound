@@ -64,6 +64,20 @@ Natural per-animal pose on sit, via `CompanionType` hooks driven by `CompanionSi
   flower-tag / golden-dandelion-exclusion and the ocelot's cod-or-salmon overrides are gone. `root.json`
   now keys off the single amethyst-shard pickup. ✅
 
+## Movement & follow
+
+- **Following bats spread out instead of stacking** — each bat now orbits its own point around the owner
+  rather than all converging just above the head. A stable per-bat angle (golden-angle spread by entity id,
+  `ORBIT_RADIUS = 1.2`) plus a small height stagger (`(id % 3) * 0.4`) gives a flock distinct slots; the
+  follow teleport drops each bat at its own offset too. `BatCompanion.followOwner`. ✅
+
+## Mounts
+
+- **Sheep mount: charged jump + water float** — play-tested in-client. A full jump charge lands the rider on
+  a two-block ledge (`WILDBOUND_JUMP_STRENGTH = 0.6`), a tap gives a low hop, and the charge bar shows while
+  mounted; riding into water bobs to the surface and paddles across, while a free-roaming companion sheep
+  keeps vanilla water behaviour. `SheepMixin` + the `can_float_while_ridden` tag. ✅
+
 ## Combat
 
 - **Companions stay out of mob combat (both directions)** — `MobCanAttackMixin` now refuses `canAttack`

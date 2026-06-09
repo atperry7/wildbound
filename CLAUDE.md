@@ -194,10 +194,11 @@ charged jump). Keep this list sorted and in sync with the `mixin/` package.
 - `docs/design-doc-v1` — design doc, kept current (has a "revision note / as built" section).
 - `docs/refinements.md` — **working log of open polish items only.** Jot rough edges here with a source
   pointer and a one-line fix sketch instead of gold-plating mid-task. Sections by readiness: _Active_
-  (ready to work, checkboxes), _Needs a decision_ (blocked on a design call, not code), _Verify in-game_
-  (compiles/loads but wants a play-test), _Accepted / by design_ (choices, not tasks). Items carry a
-  `subsystem` tag and rough **S/M/L** effort.
+  (ready to work, checkboxes), _Needs a decision_ (blocked on a design call, not code), _Accepted / by design_
+  (choices, not tasks). Items carry a `subsystem` tag and rough **S/M/L** effort.
 - `docs/completed-refinements.md` — archive of shipped refinements. When an item in `refinements.md` lands,
-  move it here rewritten to describe what was built, so the backlog stays short and current.
+  move it here rewritten to describe what was built, so the backlog stays short and current. A gameplay/visual
+  item isn't "landed" until the in-client pass confirms it — compiles-and-loads alone keeps it under _Active_
+  (note the pending play-test in its sketch); there's no separate "verify in-game" parking lot.
 - Commit style: imperative subject + a short body explaining the *why*; one logical change per commit.
   Work on a feature branch and fast-forward into `main`.

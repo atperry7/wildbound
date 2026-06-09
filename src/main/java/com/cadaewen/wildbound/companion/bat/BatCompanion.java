@@ -28,6 +28,7 @@ import net.minecraft.world.phys.Vec3;
  */
 public class BatCompanion extends CompanionType {
 
+    private static final double ORBIT_RADIUS = 1.2;
     private static final double PREFERRED_DISTANCE = 4.0;
     private static final double PREFERRED_DISTANCE_SQR = PREFERRED_DISTANCE * PREFERRED_DISTANCE;
     private static final double TELEPORT_DISTANCE_SQR = 20.0 * 20.0;
@@ -96,18 +97,28 @@ public class BatCompanion extends CompanionType {
         }
     }
 
-    /** Follow mode: trail just above the owner's head, teleporting if left too far behind. */
+    /**
+     * Follow mode: trail just above the owner's head, teleporting if left too far behind. Each bat
+     * orbits its own point around the owner so a flock spreads out instead of stacking on one spot —
+     * a stable per-bat angle (golden-angle spread by entity id) plus a small height stagger.
+     */
     private void followOwner(Bat bat, Player owner) {
         bat.setResting(false);
 
+        // Golden-angle distribution keeps successive ids well spread around the circle.
+        double angle = bat.getId() * 2.399963;
+        double offsetX = Math.cos(angle) * ORBIT_RADIUS;
+        double offsetZ = Math.sin(angle) * ORBIT_RADIUS;
+        double heightStagger = (bat.getId() % 3) * 0.4;
+
         if (bat.distanceToSqr(owner) > TELEPORT_DISTANCE_SQR) {
-            bat.teleportTo(owner.getX(), owner.getY() + 1.5, owner.getZ());
+            bat.teleportTo(owner.getX() + offsetX, owner.getY() + 1.5 + heightStagger, owner.getZ() + offsetZ);
             return;
         }
 
-        double targetX = owner.getX();
-        double targetY = owner.getEyeY() + 1.0;
-        double targetZ = owner.getZ();
+        double targetX = owner.getX() + offsetX;
+        double targetY = owner.getEyeY() + 1.0 + heightStagger;
+        double targetZ = owner.getZ() + offsetZ;
 
         double dxOwner = targetX - bat.getX();
         double dzOwner = targetZ - bat.getZ();
