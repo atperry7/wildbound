@@ -23,19 +23,6 @@ not tasks.
     adjust in code if grabbing reads as too magnet-y.
   → `companion/fox/FoxFetchItemGoal.java`
 
-- [ ] **Axolotl follow on land** · `axolotl` · M
-  Amphibious, so land-follow is a slow flop, and the follow-teleport (`canStandAt` wants air over solid)
-  can strand it out of water.
-  *Idea:* prefer water teleport targets.
-  → `companion/axolotl/AxolotlCompanion.java`
-
-- [ ] **Turtle follow feel (play-test)** · `turtle` · M
-  Turtles are very slow on land and have vanilla "home beach" pathing, so a following turtle trails far
-  behind and may tug toward its home. Compiles + loads (11 companions); never tried in-client. Same family
-  as the axolotl land-follow item — likely wants water-preferred teleport and/or a speed nudge while following.
-  *Idea:* shared "aquatic follow" helper for axolotl + turtle.
-  → `companion/turtle/TurtleCompanion.java`
-
 ## Needs a decision
 
 _(none open)_
@@ -50,6 +37,12 @@ Choices we've made, not tasks. Revisit only if they annoy in practice.
   fades at natural expiry. *Optional:* a death hook for a prompt clear.
 - **Frog tongue snatches nearby slimes/small mobs** — characterful vanilla behaviour, left in; note it can
   eat baby mobs. Suppress only if it proves annoying.
+- **Aquatic companions (axolotl, turtle) are clumsy following on land** — amphibious/slow-on-land mobs flop
+  along behind the owner, and the follow-teleport (`canStandAt` wants air over solid) can drop them out of
+  water. Previously an Active item (water-preferred teleport / aquatic-follow helper); **de-scoped** now that
+  **companion capture** exists — carry an aquatic companion in a bound cluster across dry stretches rather
+  than reworking land pathing. Revisit only if the land-follow flop annoys in practice.
+  → `companion/axolotl/AxolotlCompanion.java`, `companion/turtle/TurtleCompanion.java`
 - **Night Vision granted by both the bat and the axolotl** — intentional, not a duplicate to dedupe. The
   bat is a land/cave light source (it won't dive); the axolotl carries that vision *underwater*, where it
   pairs with the turtle's Water Breathing. Same effect, two non-overlapping use contexts.
