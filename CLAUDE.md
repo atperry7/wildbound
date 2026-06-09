@@ -60,13 +60,34 @@ the mob on taming. This keeps entity identity stable and avoids renderer/attribu
   animal still breeds normally even though its old food once tamed it. Taming is gated by
   `CompanionRegistry.isEnabled`. Empty-hand RC toggles SIT↔FOLLOW; **sneak**+empty-hand RC toggles
   WANDER↔FOLLOW. Held-item interactions (other than the universal tamer / milk) stay free for future actions.
+- **Capture / transport** — an owner may pocket their own companion with an **amethyst cluster** (the block,
+  not the shard tamer) to carry or store it past unloaded chunks and entity lag. This is the mod's **first
+  registered item and data component** (everything else is attach-to-vanilla — items are fine, the no-new-types
+  rule is about *entities*). Handled in `CompanionTaming` next to the milk branch: cluster + own companion →
+  `CompanionCapture.capture` serializes the whole mob (`Entity.save` via a `TagValueOutput`, so the entity-type
+  `id` **and** the persistent attachments ride along) into a `wildbound:bound_cluster` item
+  (`item/BoundClusterItem`, stack-of-1, carries the NBT in the `ModComponents.BOUND_ENTITY` `CustomData`
+  component — **persistent only**, read server-side at release; the title is handled separately so the entity
+  NBT never ships to clients). At capture the stack also gets a vanilla **`ITEM_NAME`** (a translatable "Bound
+  %s" that **favours a name-tagged name** — "Bound Batty" — over the species, computed here where the live
+  mob's custom name is in hand) and **`ENCHANTMENT_GLINT_OVERRIDE`** (a faint glint marks a charged cluster
+  while keeping the vanilla amethyst texture). The
+  live mob is `discard()`ed **only after** the stack is built (never lose a pet to a failed serialize); 1 cluster
+  is consumed. `BoundClusterItem.useOn` releases against the clicked face via `EntityType.create(ValueInput,…)`,
+  assigns a fresh UUID, and **shrinks the cluster (single-use — it shatters on release)**. The released mob's
+  goals re-attach through the normal `ENTITY_LOAD` hook, so it comes back a fully-wired companion in its saved
+  mode. **Gated to the owner's own companion** (others/wild → PASS, nothing happens) and **refused on a mount
+  carrying a rider** (`mob.isVehicle()`). Registered in `registry/ModItems` + `registry/ModComponents`; the item
+  is in **no creative tab** (an empty bound cluster is meaningless). New companions are auto-capturable — no
+  per-animal work. Loss is by design (die holding it → gone); the player's safeguard is an ender chest.
 - **Config** — `config/WildboundConfig.java` reads `config/wildbound.json` once at init (generated from
   defaults if missing) and applies per-mob `enabled` (→ `CompanionRegistry.setEnabled`), `tamingChanceOneInN`,
   `effectAmplifier`, and `wanderRadius` (→ the matching `CompanionType` setters, all clamped). Flicker
   constants and follow range are deliberately **not** configurable.
 - **Advancements** — custom triggers in `advancement/`, registered in `registry/ModCriteria` and fired from
-  `CompanionTaming`: `CompanionTamedTrigger` (`wildbound:companion_tamed`, on a successful tame) and
-  `CompanionWanderedTrigger` (`wildbound:companion_wandered`, when a companion is first set to wander). JSON in
+  `CompanionTaming`: `CompanionTamedTrigger` (`wildbound:companion_tamed`, on a successful tame),
+  `CompanionWanderedTrigger` (`wildbound:companion_wandered`, when a companion is first set to wander), and
+  `CompanionCapturedTrigger` (`wildbound:companion_captured`, on the first capture into a bound cluster). JSON in
   `src/main/resources/data/wildbound/advancement/` (folder is singular `advancement` this version).
   - **Tree shape (progressive reveal).** `root` ("Wildbound") is **not** a tame trigger — it fires from
     vanilla `minecraft:inventory_changed` when the player first picks up the universal taming item (an
@@ -74,7 +95,7 @@ the mob on taming. This keeps entity identity stable and avoids renderer/attribu
     mechanic. (Pre-universal-tamer this was an OR'd list of every per-animal food + the flowers tag.) `menagerie` ("A Growing Menagerie") fires on the
     first `companion_tamed` and is the **parent of every per-animal advancement and the capstone** (MC
     advancements are single-parent, so the animals can't each line into the capstone — this makes it read as
-    the culmination of that cluster). `wander`/`quiet` (teaching advancements) hang off `root`.
+    the culmination of that cluster). `wander`/`quiet`/`capture` (teaching advancements) hang off `root`.
   - **The capstone is a hand-maintained per-animal list.** `wild_knows_your_name.json` has **no "tame all"
     trigger** — it enumerates one `companion_tamed` criterion *per animal type* with a matching `requirements`
     entry. Adding a companion means adding it here too, or the capstone silently stops meaning "every kind"

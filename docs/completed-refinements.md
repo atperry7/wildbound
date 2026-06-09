@@ -85,6 +85,24 @@ Natural per-animal pose on sit, via `CompanionType` hooks driven by `CompanionSi
   mounted; riding into water bobs to the surface and paddles across, while a free-roaming companion sheep
   keeps vanilla water behaviour. `SheepMixin` + the `can_float_while_ridden` tag. ✅
 
+## Transport & storage
+
+- **Companion capture (bound cluster)** — play-tested in-client. An owner right-clicks their own companion
+  with an **amethyst cluster** (the silk-touch block, distinct from the shard tamer) to pocket it into a
+  single-use `wildbound:bound_cluster`; right-clicking a surface releases it and the cluster shatters. Solves
+  pets stranded in unloaded chunks (elytra travel) and lets a player shelve a herd to cut entity lag — the
+  bound cluster stacks to 1 and stores in chests/ender chests, surviving a relog. The mod's **first registered
+  item + data component** (`ModItems` / `ModComponents`); the whole mob NBT — entity-type id + persistent
+  attachments — serializes into a persistent-only `BOUND_ENTITY` `CustomData` (`CompanionCapture`), the mob is
+  discarded only after the stack is built (never lose a pet to a failed serialize), and release rebuilds it
+  with a fresh UUID and its goals re-attached via the normal `ENTITY_LOAD` hook. Owner-gated (others/wild do
+  nothing) and refused on a mount carrying a rider. The cluster's title favours a **name-tagged** name ("Bound
+  Batty") over the species via a baked `ITEM_NAME`, and an `ENCHANTMENT_GLINT_OVERRIDE` glint marks it as
+  charged. Item model mirrors vanilla's cluster *item* (flat `item/generated` sprite) so the glint renders
+  clean — parenting the 3-D `block/cross` model made the glint bleed across the cross planes. First capture
+  lights the **"In Safe Hands"** advancement off `root`. New companions are auto-capturable, no per-animal
+  work. `CompanionTaming` capture branch + `CompanionCapture` + `item/BoundClusterItem`. ✅
+
 ## Combat
 
 - **Companions stay out of mob combat (both directions)** — `MobCanAttackMixin` now refuses `canAttack`

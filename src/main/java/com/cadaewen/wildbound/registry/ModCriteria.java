@@ -1,6 +1,7 @@
 package com.cadaewen.wildbound.registry;
 
 import com.cadaewen.wildbound.Wildbound;
+import com.cadaewen.wildbound.advancement.CompanionCapturedTrigger;
 import com.cadaewen.wildbound.advancement.CompanionQuietedTrigger;
 import com.cadaewen.wildbound.advancement.CompanionTamedTrigger;
 import com.cadaewen.wildbound.advancement.CompanionWanderedTrigger;
@@ -26,6 +27,11 @@ public final class ModCriteria {
             BuiltInRegistries.TRIGGER_TYPES,
             Identifier.fromNamespaceAndPath(Wildbound.MOD_ID, "companion_quieted"),
             new CompanionQuietedTrigger());
+
+    public static final CompanionCapturedTrigger COMPANION_CAPTURED = Registry.register(
+            BuiltInRegistries.TRIGGER_TYPES,
+            Identifier.fromNamespaceAndPath(Wildbound.MOD_ID, "companion_captured"),
+            new CompanionCapturedTrigger());
 
     private ModCriteria() {
     }

@@ -1,0 +1,5 @@
+{
+  "item.wildbound.bound_cluster": "Bound Cluster",
+  "item.wildbound.bound_cluster.named": "Bound %s",
+  "item.wildbound.bound_cluster.hint": "Right-click a surface to release"
+}

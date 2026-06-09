@@ -1,0 +1,18 @@
+{
+  "parent": "wildbound:root",
+  "display": {
+    "icon": { "id": "wildbound:bound_cluster" },
+    "title": { "text": "In Safe Hands" },
+    "description": { "text": "Use an amethyst cluster on a companion to carry it safely." },
+    "show_toast": true,
+    "announce_to_chat": true
+  },
+  "criteria": {
+    "captured": {
+      "trigger": "wildbound:companion_captured"
+    }
+  },
+  "requirements": [
+    ["captured"]
+  ]
+}

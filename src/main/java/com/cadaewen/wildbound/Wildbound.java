@@ -13,7 +13,9 @@ import com.cadaewen.wildbound.companion.CompanionTaming;
 import com.cadaewen.wildbound.companion.WildboundAttachments;
 import com.cadaewen.wildbound.companion.goal.CompanionGoals;
 import com.cadaewen.wildbound.config.WildboundConfig;
+import com.cadaewen.wildbound.registry.ModComponents;
 import com.cadaewen.wildbound.registry.ModCriteria;
+import com.cadaewen.wildbound.registry.ModItems;
 
 public class Wildbound implements ModInitializer {
 	public static final String MOD_ID = "wildbound";
@@ -26,6 +28,8 @@ public class Wildbound implements ModInitializer {
 	@Override
 	public void onInitialize() {
 		WildboundAttachments.init();
+		ModComponents.init();
+		ModItems.init();
 		ModCriteria.init();
 		CompanionRegistry.init();
 		WildboundConfig.loadAndApply();

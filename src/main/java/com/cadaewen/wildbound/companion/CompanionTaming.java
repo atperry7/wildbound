@@ -91,6 +91,41 @@ public final class CompanionTaming {
             return InteractionResult.SUCCESS;
         }
 
+        // Amethyst cluster on your own companion → capture it into a single-use bound cluster. The power to
+        // pocket a pet (and carry/store it past unloaded chunks or entity lag) is gated behind a silk-touched
+        // cluster, so it stays a deliberate mid/late-game tool. Only the owner's own companion responds; a
+        // cluster on a wild animal or someone else's pet falls through to PASS (nothing happens).
+        if (tamed && held.is(Items.AMETHYST_CLUSTER) && hand == InteractionHand.MAIN_HAND) {
+            if (!player.getUUID().equals(CompanionBehavior.getOwnerUuid(mob))) {
+                return InteractionResult.PASS;
+            }
+            // Don't pocket a mount that's carrying a rider (e.g. a ridden sheep) — it would strand the rider.
+            if (mob.isVehicle()) {
+                return InteractionResult.PASS;
+            }
+            if (level.isClientSide()) {
+                return InteractionResult.SUCCESS;
+            }
+            ServerLevel serverLevel = (ServerLevel) level;
+            // Serialize into the item FIRST, then remove the live mob — never the reverse, so a failed
+            // capture can't destroy the companion.
+            ItemStack bound = CompanionCapture.capture(mob);
+            spawnParticles(serverLevel, mob, new DustParticleOptions(0xAA22FF, 1.0f));
+            serverLevel.playSound(null, mob.getX(), mob.getY(), mob.getZ(),
+                    SoundEvents.AMETHYST_BLOCK_CHIME, SoundSource.NEUTRAL, 1.0f, 0.8f);
+            mob.discard();
+            if (!player.hasInfiniteMaterials()) {
+                held.shrink(1);
+            }
+            if (!player.addItem(bound)) {
+                player.drop(bound, false);
+            }
+            if (player instanceof ServerPlayer serverPlayer) {
+                ModCriteria.COMPANION_CAPTURED.trigger(serverPlayer);
+            }
+            return InteractionResult.SUCCESS_SERVER;
+        }
+
         // Taming attempt: holding the universal taming item on an untamed animal. A config-disabled type is
         // skipped here so it behaves like a plain wild animal (already-tamed companions are unaffected).
         if (!tamed && CompanionRegistry.isEnabled(mob.getType()) && held.is(TAMING_ITEM)) {
