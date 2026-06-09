@@ -2,8 +2,9 @@ package com.cadaewen.wildbound.companion;
 
 import com.cadaewen.wildbound.registry.ModCriteria;
 
+import net.minecraft.core.particles.DustParticleOptions;
+import net.minecraft.core.particles.ParticleOptions;
 import net.minecraft.core.particles.ParticleTypes;
-import net.minecraft.core.particles.SimpleParticleType;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvent;
@@ -55,6 +56,7 @@ public final class CompanionTaming {
                     return handled;
                 }
                 CompanionMode newMode = toggleMode(mob, player.isShiftKeyDown());
+                announceModeToggle(serverPlayer.level(), mob, newMode);
                 if (newMode == CompanionMode.WANDER) {
                     ModCriteria.COMPANION_WANDERED.trigger(serverPlayer);
                 }
@@ -127,8 +129,27 @@ public final class CompanionTaming {
         return next;
     }
 
-    private static void spawnParticles(ServerLevel level, Mob mob, SimpleParticleType particle) {
+    private static void spawnParticles(ServerLevel level, Mob mob, ParticleOptions particle) {
         level.sendParticles(particle, mob.getX(), mob.getY() + 0.5, mob.getZ(), 7, 0.3, 0.3, 0.3, 0.02);
+    }
+
+    /**
+     * Per-mode toggle cue: a puff of the mode's signature colour plus a chime whose pitch rises with
+     * engagement (sit → wander → follow). Mirrors {@link #announceBuffToggle} so every companion-state
+     * change reads the same way, and the colour is distinct enough to recall what you set a pet to after
+     * the fact — white = SIT, purple = WANDER, gold = FOLLOW.
+     */
+    private static void announceModeToggle(ServerLevel level, Mob mob, CompanionMode mode) {
+        int color;
+        float pitch;
+        switch (mode) {
+            case SIT -> { color = 0xFFFFFF; pitch = 0.7f; }     // white, low
+            case WANDER -> { color = 0xAA22FF; pitch = 1.0f; }  // purple, mid
+            default -> { color = 0xFFC400; pitch = 1.4f; }      // gold (FOLLOW), high
+        }
+        spawnParticles(level, mob, new DustParticleOptions(color, 1.0f));
+        level.playSound(null, mob.getX(), mob.getY(), mob.getZ(), SoundEvents.AMETHYST_BLOCK_CHIME,
+                SoundSource.NEUTRAL, 1.0f, pitch);
     }
 
     /** Small aud/visual cue for a buff toggle: a smoke puff + low chime when quieted, sparkle + bright chime when restored. */
