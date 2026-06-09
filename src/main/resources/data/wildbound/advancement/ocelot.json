@@ -1,0 +1,19 @@
+{
+  "parent": "wildbound:root",
+  "display": {
+    "icon": { "id": "minecraft:salmon" },
+    "title": { "text": "Patient Approach" },
+    "description": { "text": "A few fish, and the jungle's ghost stayed." },
+    "show_toast": true,
+    "announce_to_chat": true
+  },
+  "criteria": {
+    "tamed_ocelot": {
+      "trigger": "wildbound:companion_tamed",
+      "conditions": { "animal_type": "minecraft:ocelot" }
+    }
+  },
+  "requirements": [
+    ["tamed_ocelot"]
+  ]
+}

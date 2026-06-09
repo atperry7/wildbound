@@ -6,6 +6,8 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.effect.MobEffect;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.entity.Mob;
+import net.minecraft.world.entity.PathfinderMob;
+import net.minecraft.world.entity.ai.goal.GoalSelector;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
@@ -93,6 +95,14 @@ public abstract class CompanionType {
      */
     public boolean serverTickBehavior(Mob mob, ServerLevel level, Player owner, CompanionMode mode) {
         return false;
+    }
+
+    /**
+     * Attaches companion-type-specific goals on entity load, after the shared follow/sit/tick goals. Most
+     * companions need none; the fox overrides this to add its item-fetch goal. Goals stay dormant until the
+     * mob is tamed (they gate on companion state), so attaching to an untamed mob is harmless.
+     */
+    public void attachGoals(PathfinderMob mob, GoalSelector goals) {
     }
 
     /** Called once when a goal-driven companion enters sit mode. Override to apply a natural sit pose. */

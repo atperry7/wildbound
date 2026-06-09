@@ -84,9 +84,22 @@ the mob on taming. This keeps entity identity stable and avoids renderer/attribu
   shared effect, and it scales to many companions).
 - Apply with the **6-arg** `MobEffectInstance(..., ambient=true, visible=false, showIcon=true)`. The 5-arg
   form sets `showIcon = visible`, which would hide the HUD icon (the buff's only indicator).
-- **Fox is the one exception:** its passive is XP ×2, not a status effect. `passiveEffect()` is `null`;
-  the bonus is `ServerPlayerExperienceMixin` (`@ModifyVariable` on `giveExperiencePoints`) gated by
-  `CompanionBehavior.hasActiveCompanion(player, EntityType.FOX)`. `FoxXpBonus` does the doubling + sparkle.
+- **Two companions have non-effect passives** (`passiveEffect()` is `null`; the work runs elsewhere):
+  - **Ocelot** (tamed with raw cod/salmon): XP ×2. The bonus is `ServerPlayerExperienceMixin`
+    (`@ModifyVariable` on `giveExperiencePoints`) gated by
+    `CompanionBehavior.hasActiveCompanion(player, EntityType.OCELOT)`; `OcelotXpBonus` does the doubling +
+    sparkle. (Was the fox's passive originally.)
+  - **Fox** (tamed with sweet berries): fetches nearby dropped items into the owner's inventory.
+    `FoxFetchItemGoal` (attached via the `CompanionType.attachGoals` hook, priority 1, just under follow's 0)
+    pathfinds the fox to the nearest `ItemEntity` within 8 blocks, then acts as a **mobile magnet** — every
+    item within a ~1.5-block bubble *around the fox* (not the player) is sent to the owner via vanilla
+    `ItemEntity.playerTouch(owner)` (reusing the fly-to-player animation, sound, pickup-delay/target checks,
+    and full-inventory handling). The bubble being a little wider than where pathfinding parks is what lets it
+    grab an item it stops just short of (e.g. on a block edge) instead of freezing; a `STUCK_TICKS`/`blacklist`
+    backstop only triggers for genuinely walled-off items so the fox moves on. Same activation rules as a
+    status passive — following, in range, not milk-quieted; follow outranks it so a fox that falls behind
+    catches up first, bounding how far it strays. `FoxCompanion.serverTickBehavior` turns off the companion
+    fox's vanilla `canPickUpLoot` so the goal is the sole collector (items go to the owner, not its mouth).
 
 ### Sit poses
 
@@ -101,7 +114,8 @@ Ground/flying/swimming `PathfinderMob`:
 1. `companion/<animal>/<Animal>Companion.java` extends `CompanionType` (taming item + `passiveEffect`).
 2. Register it in `CompanionRegistry.init()`.
 3. Add `src/main/resources/data/wildbound/advancement/<animal>.json` (child of `wildbound:root`).
-4. Optional: override sit-pose hooks for a natural pose. **No mixin needed** — `ENTITY_LOAD` attaches goals.
+4. Optional: override sit-pose hooks for a natural pose, or `attachGoals` for type-specific goals (the fox's
+   item fetch is the example). **No mixin needed** — `ENTITY_LOAD` attaches the shared + per-type goals.
 
 A mob that bypasses goals (like the bat) needs its own mixin into its AI step instead.
 
@@ -109,7 +123,7 @@ A mob that bypasses goals (like the bat) needs its own mixin into its AI step in
 
 `AvoidEntityGoalMixin` (companions don't flee players), `BatMixin` (bat AI step), `MobAccessor`
 (goalSelector), `MobCanAttackMixin` (companions don't attack companions), `ServerPlayerExperienceMixin`
-(fox XP), `FoxAccessor` (`setSleeping`). Keep this list sorted and in sync with the `mixin/` package.
+(ocelot XP), `FoxAccessor` (`setSleeping`). Keep this list sorted and in sync with the `mixin/` package.
 
 ## Gotchas learned
 

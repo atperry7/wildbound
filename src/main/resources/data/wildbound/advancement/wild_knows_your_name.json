@@ -16,7 +16,8 @@
     "axolotl": { "trigger": "wildbound:companion_tamed", "conditions": { "animal_type": "minecraft:axolotl" } },
     "bee": { "trigger": "wildbound:companion_tamed", "conditions": { "animal_type": "minecraft:bee" } },
     "panda": { "trigger": "wildbound:companion_tamed", "conditions": { "animal_type": "minecraft:panda" } },
-    "armadillo": { "trigger": "wildbound:companion_tamed", "conditions": { "animal_type": "minecraft:armadillo" } }
+    "armadillo": { "trigger": "wildbound:companion_tamed", "conditions": { "animal_type": "minecraft:armadillo" } },
+    "ocelot": { "trigger": "wildbound:companion_tamed", "conditions": { "animal_type": "minecraft:ocelot" } }
   },
   "requirements": [
     ["bat"],
@@ -26,6 +27,7 @@
     ["axolotl"],
     ["bee"],
     ["panda"],
-    ["armadillo"]
+    ["armadillo"],
+    ["ocelot"]
   ]
 }

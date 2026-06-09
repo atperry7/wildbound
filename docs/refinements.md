@@ -41,9 +41,20 @@ Still open:
   another *companion* (fixed: companion fox no longer kills the owner's rabbit). A *wild* fox/wolf can
   still hunt a tamed rabbit/companion. *Idea:* optionally protect companions from all non-owned attackers,
   or make tamed prey not match predator targeting selectors.
-- **Fox bonus indicator is per-gain only.** A green sparkle shows on the fox when it doubles XP, but there
-  is no persistent "bonus active" cue like the status-effect companions' inventory icon. *Idea:* a subtle
-  persistent indicator (e.g. faint periodic particle while a fox follows), or surface it in a future HUD.
+- **Ocelot bonus indicator is per-gain only.** A green sparkle shows on the ocelot when it doubles XP, but
+  there is no persistent "bonus active" cue like the status-effect companions' inventory icon. *Idea:* a
+  subtle persistent indicator (e.g. faint periodic particle while an ocelot follows), or surface it in a HUD.
+- **Fox fetch edges.** The fox pathfinds to the nearest item (`FoxFetchItemGoal`) and acts as a ~1.5-block
+  *mobile magnet* centred on itself — items in the bubble go to the owner via `playerTouch`; its vanilla
+  `canPickUpLoot` is off so it can't pocket items. The bubble being wider than where pathfinding parks grabs
+  edge-of-block items that used to freeze it; a `STUCK_TICKS` + `BLACKLIST_TICKS` backstop (countdown only
+  after the navigation is *done*, so far items aren't abandoned mid-walk) covers genuinely walled-off items.
+  Remaining rough spots: (a) a full inventory makes `playerTouch` no-op, so the fox keeps re-targeting an
+  item it can't deposit; (b) it chases a freshly thrown item and waits out the ~2s pickup delay rather than
+  ignoring it until pickable; (c) no persistent "fetching" indicator (same no-status-icon gap as the ocelot
+  above); (d) `PICKUP_RADIUS` (1.5) is an internal feel knob, deliberately not in config — adjust in code if
+  grabbing reads as too magnet-y. *Ideas:* skip
+  items the owner's inventory can't accept; defer targeting until the pickup delay clears.
 - **Axolotl follow on land** — amphibious, so following on land is a slow flop, and the follow-teleport
   (`canStandAt` wants air over solid) can strand it out of water. *Idea:* prefer water teleport targets.
 - **Armadillo follow** — may still curl up mid-follow if it senses a threat (sprinting player). Cosmetic;
@@ -80,13 +91,13 @@ Still open:
 
 - **Effect-pet HUD icon** — now ON (showIcon=true, particles off). The seven status-effect companions
   show their effect icon while their buff is active. ✅
-- **Fox HUD indicator** — the fox has no status effect, so it can't show an effect icon; right now it
-  only sparkles green when it doubles XP. Idea: give the fox a persistent "active" cue similar to an
+- **Ocelot HUD indicator** — the ocelot has no status effect, so it can't show an effect icon; right now it
+  only sparkles green when it doubles XP. Idea: give the ocelot a persistent "active" cue similar to an
   effect icon — e.g. a **custom green XP-bonus MobEffect** used purely as an indicator. ⚠️ *Tension:* a
   custom effect is a new effect, which crosses the design doc's "vanilla items/effects only" rule. Decide
   whether the indicator is worth that exception, or settle for a non-effect cue (periodic faint particle
-  while a fox follows, or a future custom HUD widget). No vanilla effect is a clean no-op indicator (Luck
-  affects loot, etc.).
+  while an ocelot follows, or a future custom HUD widget). No vanilla effect is a clean no-op indicator (Luck
+  affects loot, etc.). The fox (item fetch) shares this no-status-icon gap.
 
 ## Companion modes / interactions
 
@@ -94,7 +105,7 @@ Still open:
   e.g. hold an item and **sneak + right-click**. Useful when they want the companion around but not the
   effect (avoid effect clutter, or save it for when needed).
   - *Implementation sketch:* a per-companion `buffEnabled` flag (attachment, default true). When false,
-    `CompanionBehavior.refreshPassive` skips applying (and `FoxXpBonus`/`hasActiveCompanion` treat it as
+    `CompanionBehavior.refreshPassive` skips applying (and `OcelotXpBonus`/`hasActiveCompanion` treat it as
     inactive). Follow/sit behaviour unchanged.
   - *Interaction map (now settled by the wander work):* empty-hand RC = SIT↔FOLLOW; sneak + empty-hand
     RC = WANDER↔FOLLOW; held-item-on-untamed = taming. So buff-off should take the remaining lane —

@@ -1,5 +1,7 @@
 package com.cadaewen.wildbound.companion.goal;
 
+import com.cadaewen.wildbound.companion.CompanionRegistry;
+import com.cadaewen.wildbound.companion.CompanionType;
 import com.cadaewen.wildbound.mixin.MobAccessor;
 
 import net.minecraft.world.entity.PathfinderMob;
@@ -26,5 +28,11 @@ public final class CompanionGoals {
         // unless a restriction is set, which only happens in WANDER (see CompanionBehavior.syncWanderLeash).
         // Priority 5 so it sits below follow/sit but above vanilla idle wandering.
         goals.addGoal(5, new MoveTowardsRestrictionGoal(mob, 1.0));
+
+        // Companion-type-specific goals (e.g. the fox's item fetch). No-op for most types.
+        CompanionType type = CompanionRegistry.get(mob);
+        if (type != null) {
+            type.attachGoals(mob, goals);
+        }
     }
 }

@@ -1,19 +1,25 @@
 package com.cadaewen.wildbound.companion.fox;
 
+import com.cadaewen.wildbound.companion.CompanionMode;
 import com.cadaewen.wildbound.companion.CompanionType;
 import com.cadaewen.wildbound.mixin.FoxAccessor;
 
 import net.minecraft.core.Holder;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.effect.MobEffect;
 import net.minecraft.world.entity.Mob;
+import net.minecraft.world.entity.PathfinderMob;
+import net.minecraft.world.entity.ai.goal.GoalSelector;
 import net.minecraft.world.entity.animal.fox.Fox;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.Items;
 
 /**
- * Fox companion: tamed with Sweet Berries. The framework's one exception — its passive is not a status
- * effect but a <b>x2 XP bonus</b> while following, applied by {@link FoxXpBonus} via the experience mixin.
- * So {@link #passiveEffect()} is null and the per-tick effect path does nothing for the fox.
+ * Fox companion: tamed with Sweet Berries. The framework's one non-effect passive — instead of a status
+ * effect, a following fox <b>fetches nearby dropped items</b> into its owner's inventory. The fetch is a
+ * movement goal ({@link FoxFetchItemGoal}, attached via {@link #attachGoals}): the fox actually runs to the
+ * item before delivering it. So {@link #passiveEffect()} is null.
  *
  * <p>On sit it takes the vanilla lying-down (sleeping) pose.
  */
@@ -27,6 +33,25 @@ public class FoxCompanion extends CompanionType {
     @Override
     public Holder<MobEffect> passiveEffect() {
         return null;
+    }
+
+    @Override
+    public void attachGoals(PathfinderMob mob, GoalSelector goals) {
+        // Priority 1: just under the follow goal (0), so catching up to the owner preempts chasing loot.
+        goals.addGoal(1, new FoxFetchItemGoal(mob, 1.2));
+    }
+
+    /**
+     * Suppress the vanilla "carry an item in its mouth" pickup for a companion fox, so the fetch goal is the
+     * sole collector and everything is delivered to the owner instead of disappearing into the fox's mouth.
+     * Never suppresses the fox's vanilla AI step.
+     */
+    @Override
+    public boolean serverTickBehavior(Mob mob, ServerLevel level, Player owner, CompanionMode mode) {
+        if (mob.canPickUpLoot()) {
+            mob.setCanPickUpLoot(false);
+        }
+        return false;
     }
 
     @Override

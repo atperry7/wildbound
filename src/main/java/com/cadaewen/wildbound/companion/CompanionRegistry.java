@@ -13,6 +13,7 @@ import com.cadaewen.wildbound.companion.bat.BatCompanion;
 import com.cadaewen.wildbound.companion.bee.BeeCompanion;
 import com.cadaewen.wildbound.companion.fox.FoxCompanion;
 import com.cadaewen.wildbound.companion.frog.FrogCompanion;
+import com.cadaewen.wildbound.companion.ocelot.OcelotCompanion;
 import com.cadaewen.wildbound.companion.panda.PandaCompanion;
 import com.cadaewen.wildbound.companion.rabbit.RabbitCompanion;
 
@@ -89,5 +90,6 @@ public final class CompanionRegistry {
         register(EntityType.BEE, new BeeCompanion());
         register(EntityType.AXOLOTL, new AxolotlCompanion());
         register(EntityType.FOX, new FoxCompanion());
+        register(EntityType.OCELOT, new OcelotCompanion());
     }
 }

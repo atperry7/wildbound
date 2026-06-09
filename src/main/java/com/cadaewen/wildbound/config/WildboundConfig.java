@@ -114,7 +114,8 @@ public final class WildboundConfig {
         JsonObject root = new JsonObject();
         root.addProperty("_comment", "Wildbound per-mob settings. enabled gates new taming (existing pets "
                 + "persist); tamingChanceOneInN is 1-in-N odds (1 = always); effectAmplifier is the buff "
-                + "level (0 = I) and is ignored for the fox, whose passive is an XP bonus; wanderRadius is "
+                + "level (0 = I) and is ignored for the ocelot (XP bonus) and fox (item fetch), whose "
+                + "passives aren't status effects; wanderRadius is "
                 + "how far a wandering companion may roam from where you set it (blocks).");
         root.add(KEY_COMPANIONS, companions);
 
