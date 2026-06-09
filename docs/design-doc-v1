@@ -199,20 +199,28 @@ No interaction or entity-conversion mixins are required.
 
 ## Advancements
 
-All advancements use a single shared criterion trigger `wildbound:companion_tamed` that fires with the animal type as a parameter. Per-animal advancements are children of *"Wildbound"*. The capstone is a child of *"Wildbound"* and requires all others to have been earned.
+Per-animal advancements use a single shared trigger `wildbound:companion_tamed` that fires with the animal type as a parameter. The tree reveals **progressively**, so it can hint at itself before a player has tamed anything:
+
+- *"Wildbound"* (the root) fires from vanilla `minecraft:inventory_changed` the moment the player first picks up **any** taming item (a flower, apple, spider eye, …). It lands early and its description teaches the mechanic — an onboarding nudge, not a reward for taming.
+- *"A Growing Menagerie"* fires on the **first successful tame** and is the parent of every per-animal advancement *and* the capstone, so the capstone reads as the visible culmination of that animal cluster (MC advancements are single-parent, so the animals can't each draw a line into it — this is the closest legible layout).
+- *"The Wild Knows Your Name"* (capstone) requires one tame of **every** companion type.
+- Two teaching advancements hang directly off the root: *"Home on the Range"* (first wander) and *"Peace and Quiet"* (first milk-quiet).
 
 | Advancement | Trigger | Description | Parent |
 |---|---|---|---|
-| *"Wildbound"* | Tame any companion for the first time | *"Earned the trust of a wild creature."* | — |
-| *"Wing and a Prayer"* | Tame a bat | *"The dark does not frighten you anymore."* | Wildbound |
-| *"Quick and Quiet"* | Tame a rabbit | *"It let you get close."* | Wildbound |
-| *"Fox Friend"* | Tame a fox | *"They usually don't trust anyone."* | Wildbound |
-| *"Leap of Faith"* | Tame a frog | *"Every landing is softer now."* | Wildbound |
-| *"Below the Surface"* | Tame an axolotl | *"The deep is no longer off limits."* | Wildbound |
-| *"Busy as a Bee"* | Tame a bee | *"Their energy is infectious."* | Wildbound |
-| *"Unhurried"* | Tame a panda | *"Patience has its rewards."* | Wildbound |
-| *"Rolled Over"* | Tame an armadillo | *"It decided you were worth uncurling for."* | Wildbound |
-| *"The Wild Knows Your Name"* | Tame one of every companion type | *"Not a single creature could resist you."* | Wildbound |
+| *"Wildbound"* | Pick up any taming item | *"Hold a wild creature's favorite food, then use it on the animal to earn its trust."* | — |
+| *"A Growing Menagerie"* | Tame any companion for the first time | *"One bond is a beginning. Gather companions of every kind."* | Wildbound |
+| *"Wing and a Prayer"* | Tame a bat | *"The dark does not frighten you anymore."* | A Growing Menagerie |
+| *"Quick and Quiet"* | Tame a rabbit | *"It let you get close."* | A Growing Menagerie |
+| *"Fox Friend"* | Tame a fox | *"They usually don't trust anyone."* | A Growing Menagerie |
+| *"Leap of Faith"* | Tame a frog | *"Every landing is softer now."* | A Growing Menagerie |
+| *"Below the Surface"* | Tame an axolotl | *"The deep is no longer off limits."* | A Growing Menagerie |
+| *"Busy as a Bee"* | Tame a bee | *"Their energy is infectious."* | A Growing Menagerie |
+| *"Unhurried"* | Tame a panda | *"Patience has its rewards."* | A Growing Menagerie |
+| *"Rolled Over"* | Tame an armadillo | *"It decided you were worth uncurling for."* | A Growing Menagerie |
+| *"The Wild Knows Your Name"* | Tame one of every companion type | *"Not a single creature could resist you."* | A Growing Menagerie |
+
+*(The per-animal rows list the original eight; the ocelot and sheep advancements were added later and follow the same shape under "A Growing Menagerie".)*
 
 ---
 

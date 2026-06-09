@@ -1,5 +1,5 @@
 {
-  "parent": "wildbound:root",
+  "parent": "wildbound:menagerie",
   "display": {
     "icon": { "id": "minecraft:slime_ball" },
     "title": { "text": "Leap of Faith" },

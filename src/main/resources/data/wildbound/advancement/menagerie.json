@@ -1,0 +1,18 @@
+{
+  "parent": "wildbound:root",
+  "display": {
+    "icon": { "id": "minecraft:name_tag" },
+    "title": { "text": "A Growing Menagerie" },
+    "description": { "text": "One bond is a beginning. Gather companions of every kind." },
+    "show_toast": true,
+    "announce_to_chat": true
+  },
+  "criteria": {
+    "tamed_any": {
+      "trigger": "wildbound:companion_tamed"
+    }
+  },
+  "requirements": [
+    ["tamed_any"]
+  ]
+}

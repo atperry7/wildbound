@@ -38,16 +38,7 @@ not tasks.
 
 ## Needs a decision
 
-- **Capstone tree wiring** · `advancements`
-  Today the tree fans out: `root` → 8 animal advancements + the capstone, all siblings of `root`. The
-  capstone already *requires* all types, so it's functionally "tame everything" — but visually it only
-  connects to `root`.
-  *Constraint:* MC advancements are **single-parent**, so "all animals draw a line into the capstone" isn't
-  literally possible.
-  *Options:* (a) leave as-is — requirements already gate it; (b) chain it after one specific animal so it
-  reads as an endpoint (arbitrary); (c) move the per-animal advancements under a sub-node and place the
-  capstone as the visible culmination off that node.
-  → pick a layout, then it's `parent` edits in `data/wildbound/advancement/*.json`
+_(none open)_
 
 ## Accepted / by design
 

@@ -1,5 +1,5 @@
 {
-  "parent": "wildbound:root",
+  "parent": "wildbound:menagerie",
   "display": {
     "icon": { "id": "minecraft:lead" },
     "title": { "text": "The Wild Knows Your Name" },
@@ -17,7 +17,8 @@
     "bee": { "trigger": "wildbound:companion_tamed", "conditions": { "animal_type": "minecraft:bee" } },
     "panda": { "trigger": "wildbound:companion_tamed", "conditions": { "animal_type": "minecraft:panda" } },
     "armadillo": { "trigger": "wildbound:companion_tamed", "conditions": { "animal_type": "minecraft:armadillo" } },
-    "ocelot": { "trigger": "wildbound:companion_tamed", "conditions": { "animal_type": "minecraft:ocelot" } }
+    "ocelot": { "trigger": "wildbound:companion_tamed", "conditions": { "animal_type": "minecraft:ocelot" } },
+    "sheep": { "trigger": "wildbound:companion_tamed", "conditions": { "animal_type": "minecraft:sheep" } }
   },
   "requirements": [
     ["bat"],
@@ -28,6 +29,7 @@
     ["bee"],
     ["panda"],
     ["armadillo"],
-    ["ocelot"]
+    ["ocelot"],
+    ["sheep"]
   ]
 }

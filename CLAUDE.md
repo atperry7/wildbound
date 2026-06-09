@@ -63,6 +63,17 @@ the mob on taming. This keeps entity identity stable and avoids renderer/attribu
   `CompanionTaming`: `CompanionTamedTrigger` (`wildbound:companion_tamed`, on a successful tame) and
   `CompanionWanderedTrigger` (`wildbound:companion_wandered`, when a companion is first set to wander). JSON in
   `src/main/resources/data/wildbound/advancement/` (folder is singular `advancement` this version).
+  - **Tree shape (progressive reveal).** `root` ("Wildbound") is **not** a tame trigger — it fires from
+    vanilla `minecraft:inventory_changed` when the player first picks up *any* taming item (item list +
+    `#minecraft:flowers` tag, OR'd in one `requirements` group), so the tree hints at the mod *before* the
+    first tame and its description teaches the mechanic. `menagerie` ("A Growing Menagerie") fires on the
+    first `companion_tamed` and is the **parent of every per-animal advancement and the capstone** (MC
+    advancements are single-parent, so the animals can't each line into the capstone — this makes it read as
+    the culmination of that cluster). `wander`/`quiet` (teaching advancements) hang off `root`.
+  - **The capstone is a hand-maintained per-animal list.** `wild_knows_your_name.json` has **no "tame all"
+    trigger** — it enumerates one `companion_tamed` criterion *per animal type* with a matching `requirements`
+    entry. Adding a companion means adding it here too, or the capstone silently stops meaning "every kind"
+    (this is exactly how the **sheep** entry was missed — it required 9 of 10).
 
 ### Movement: two paths
 
@@ -121,7 +132,11 @@ to land (`controlsSitMovement`).
 Ground/flying/swimming `PathfinderMob`:
 1. `companion/<animal>/<Animal>Companion.java` extends `CompanionType` (taming item + `passiveEffect`).
 2. Register it in `CompanionRegistry.init()`.
-3. Add `src/main/resources/data/wildbound/advancement/<animal>.json` (child of `wildbound:root`).
+3. Add `src/main/resources/data/wildbound/advancement/<animal>.json` (parent `wildbound:menagerie`, **not**
+   `root`), **and** add a `companion_tamed` criterion + `requirements` entry for the new type to
+   `wild_knows_your_name.json` — the capstone is a hand-maintained per-animal list, so skipping this quietly
+   drops the animal from "tame one of every kind" (how sheep got missed). If the new taming item isn't
+   already covered by `root.json`'s `inventory_changed` list, add it there too so the hint still fires.
 4. Optional: override sit-pose hooks for a natural pose, or `attachGoals` for type-specific goals (the fox's
    item fetch is the example). **No mixin needed** — `ENTITY_LOAD` attaches the shared + per-type goals.
 

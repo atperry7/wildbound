@@ -2,18 +2,24 @@
   "display": {
     "icon": { "id": "minecraft:wildflowers" },
     "title": { "text": "Wildbound" },
-    "description": { "text": "Earned the trust of a wild creature." },
+    "description": { "text": "Hold a wild creature's favorite food, then use it on the animal to earn its trust." },
     "background": "minecraft:gui/advancements/backgrounds/husbandry",
     "frame": "task",
     "show_toast": true,
     "announce_to_chat": true
   },
   "criteria": {
-    "tamed_any": {
-      "trigger": "wildbound:companion_tamed"
-    }
+    "spider_eye": { "trigger": "minecraft:inventory_changed", "conditions": { "items": [ { "items": "minecraft:spider_eye" } ] } },
+    "bamboo": { "trigger": "minecraft:inventory_changed", "conditions": { "items": [ { "items": "minecraft:bamboo" } ] } },
+    "slime_ball": { "trigger": "minecraft:inventory_changed", "conditions": { "items": [ { "items": "minecraft:slime_ball" } ] } },
+    "tropical_fish": { "trigger": "minecraft:inventory_changed", "conditions": { "items": [ { "items": "minecraft:tropical_fish" } ] } },
+    "sweet_berries": { "trigger": "minecraft:inventory_changed", "conditions": { "items": [ { "items": "minecraft:sweet_berries" } ] } },
+    "cod": { "trigger": "minecraft:inventory_changed", "conditions": { "items": [ { "items": "minecraft:cod" } ] } },
+    "salmon": { "trigger": "minecraft:inventory_changed", "conditions": { "items": [ { "items": "minecraft:salmon" } ] } },
+    "apple": { "trigger": "minecraft:inventory_changed", "conditions": { "items": [ { "items": "minecraft:apple" } ] } },
+    "flower": { "trigger": "minecraft:inventory_changed", "conditions": { "items": [ { "items": "#minecraft:flowers" } ] } }
   },
   "requirements": [
-    ["tamed_any"]
+    ["spider_eye", "bamboo", "slime_ball", "tropical_fish", "sweet_berries", "cod", "salmon", "apple", "flower"]
   ]
 }

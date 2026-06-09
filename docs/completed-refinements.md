@@ -31,6 +31,17 @@ Natural per-animal pose on sit, via `CompanionType` hooks driven by `CompanionSi
 
 - **Taming-item hint** — each per-animal advancement's icon is its taming item, so the badge hints what
   to use. ✅
+- **Menagerie sub-node** — inserted `menagerie.json` (*A Growing Menagerie*) as a quiet hub under `root`;
+  re-parented all ten per-animal advancements and the capstone under it, so the capstone reads as the
+  visible culmination of the animal cluster instead of a bare sibling of `root`. Teaching nodes (`wander`,
+  `quiet`) stay directly under `root`. Single-parent limit means animals still can't each draw a line into
+  the capstone; this is the closest legible layout. ✅
+- **Capstone covers every companion** — `wild_knows_your_name` was missing `sheep` (required 9 of 10);
+  added it so "tame one of every kind" really means all ten. ✅
+- **Root as a discovery hint** — `root` ("Wildbound") now fires from vanilla `minecraft:inventory_changed`
+  the moment the player first picks up *any* taming item, with a description that teaches the mechanic, so
+  the tree surfaces the mod before the first tame. The first-tame beat moved to `menagerie` (toast/announce
+  re-enabled). Onboarding escalation: get the food → first bond → collect → capstone. ✅
 
 ## Combat
 

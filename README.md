@@ -54,8 +54,10 @@ playful exception — it'll still snap up a nearby slime.)
 
 ## Advancements
 
-Tame your first companion to earn **Wildbound**, with a child advancement for each animal, plus the
-challenge **"The Wild Knows Your Name"** for taming one of every kind.
+Pick up any creature's taming food — a flower, an apple, a spider eye — to earn **Wildbound**, an early
+nudge that these animals can be bonded (its description tells you how). Tame your first companion for **A
+Growing Menagerie**, which opens a child advancement for each animal, capped by the challenge **"The Wild
+Knows Your Name"** for taming one of every kind.
 
 ## Building
 

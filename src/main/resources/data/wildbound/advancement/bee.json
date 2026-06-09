@@ -1,5 +1,5 @@
 {
-  "parent": "wildbound:root",
+  "parent": "wildbound:menagerie",
   "display": {
     "icon": { "id": "minecraft:poppy" },
     "title": { "text": "Busy as a Bee" },
