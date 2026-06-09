@@ -1,0 +1,18 @@
+{
+  "parent": "wildbound:root",
+  "display": {
+    "icon": { "id": "minecraft:milk_bucket" },
+    "title": { "text": "Peace and Quiet" },
+    "description": { "text": "Use a milk bucket on a companion to quiet its passive." },
+    "show_toast": true,
+    "announce_to_chat": true
+  },
+  "criteria": {
+    "quieted": {
+      "trigger": "wildbound:companion_quieted"
+    }
+  },
+  "requirements": [
+    ["quieted"]
+  ]
+}

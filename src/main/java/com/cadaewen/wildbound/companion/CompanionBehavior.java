@@ -53,6 +53,15 @@ public final class CompanionBehavior {
         return getMode(mob) == CompanionMode.WANDER;
     }
 
+    /** Whether the owner has quieted this companion's passive with a milk bucket (default false). */
+    public static boolean isBuffDisabled(Mob mob) {
+        return mob.getAttachedOrElse(WildboundAttachments.BUFF_DISABLED, false);
+    }
+
+    public static void setBuffDisabled(Mob mob, boolean disabled) {
+        mob.setAttached(WildboundAttachments.BUFF_DISABLED, disabled);
+    }
+
     public static UUID getOwnerUuid(Mob mob) {
         return mob.getAttached(WildboundAttachments.OWNER);
     }
@@ -81,7 +90,7 @@ public final class CompanionBehavior {
         AABB box = owner.getBoundingBox().inflate(
                 CompanionType.FOLLOW_RANGE, CompanionType.FOLLOW_RANGE, CompanionType.FOLLOW_RANGE);
         for (Mob mob : owner.level().getEntitiesOfClass(Mob.class, box, m -> m.getType() == type)) {
-            if (isCompanion(mob) && isFollowing(mob)
+            if (isCompanion(mob) && isFollowing(mob) && !isBuffDisabled(mob)
                     && owner.getUUID().equals(getOwnerUuid(mob))
                     && mob.distanceToSqr(owner) <= CompanionType.FOLLOW_RANGE_SQR) {
                 return mob;
@@ -151,7 +160,8 @@ public final class CompanionBehavior {
         if (effect == null || !(owner instanceof ServerPlayer serverOwner)) {
             return;
         }
-        boolean active = mode == CompanionMode.FOLLOW && mob.distanceToSqr(owner) <= CompanionType.FOLLOW_RANGE_SQR;
+        boolean active = mode == CompanionMode.FOLLOW && !isBuffDisabled(mob)
+                && mob.distanceToSqr(owner) <= CompanionType.FOLLOW_RANGE_SQR;
         if (active && mob.tickCount % CompanionType.REAPPLY_INTERVAL_TICKS == 0) {
             type.applyPassiveBonus(serverOwner);
         }

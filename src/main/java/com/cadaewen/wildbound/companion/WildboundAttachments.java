@@ -4,6 +4,8 @@ import java.util.UUID;
 
 import com.cadaewen.wildbound.Wildbound;
 
+import com.mojang.serialization.Codec;
+
 import net.fabricmc.fabric.api.attachment.v1.AttachmentRegistry;
 import net.fabricmc.fabric.api.attachment.v1.AttachmentType;
 import net.minecraft.core.BlockPos;
@@ -32,6 +34,14 @@ public final class WildboundAttachments {
      */
     public static final AttachmentType<BlockPos> WANDER_ANCHOR = AttachmentRegistry.createPersistent(
             Identifier.fromNamespaceAndPath(Wildbound.MOD_ID, "wander_anchor"), BlockPos.CODEC);
+
+    /**
+     * Whether the owner has quieted this companion's passive (toggled with a milk bucket). Persistent and
+     * per-companion; absent means {@code false} (passive active). A quieted companion still follows — it
+     * just stops refreshing its buff, so the effect fades on its own (no teardown, matching the design).
+     */
+    public static final AttachmentType<Boolean> BUFF_DISABLED = AttachmentRegistry.createPersistent(
+            Identifier.fromNamespaceAndPath(Wildbound.MOD_ID, "buff_disabled"), Codec.BOOL);
 
     private WildboundAttachments() {
     }
