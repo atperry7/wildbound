@@ -31,3 +31,12 @@ Natural per-animal pose on sit, via `CompanionType` hooks driven by `CompanionSi
 
 - **Taming-item hint** — each per-animal advancement's icon is its taming item, so the badge hints what
   to use. ✅
+
+## Combat
+
+- **Companions stay out of mob combat (both directions)** — `MobCanAttackMixin` now refuses `canAttack`
+  whenever *either* side is a companion. Tamed prey is untargetable by any mob (a wild fox/wolf or a
+  hostile won't hunt the owner's rabbit); tamed predators are fully pacified in every mode (a companion
+  fox/ocelot/axolotl acquires no mob target, so it stays with the owner instead of chasing wild prey —
+  no retaliation/self-defence either, by design). Subsumes the old companion-vs-companion guard. The
+  frog's tongue is a separate goal path and is left characterful. ✅

@@ -132,7 +132,8 @@ merges the ridden-control overrides into `Sheep`.
 ## Mixins (`wildbound.mixins.json`)
 
 `AvoidEntityGoalMixin` (companions don't flee players), `BatMixin` (bat AI step), `MobAccessor`
-(goalSelector), `MobCanAttackMixin` (companions don't attack companions), `ServerPlayerExperienceMixin`
+(goalSelector), `MobCanAttackMixin` (companions stay out of mob combat — untargetable as prey,
+pacified as predators), `ServerPlayerExperienceMixin`
 (ocelot XP), `FoxAccessor` (`setSleeping`), `SheepMixin` (rideable-sheep ridden control). Keep this list
 sorted and in sync with the `mixin/` package.
 

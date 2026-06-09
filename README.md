@@ -46,8 +46,11 @@ inventory, and the **Sheep** is a saddle-free mount — right-click it with an e
 - While **sitting**, a companion stays put, takes a natural resting pose (where it has one), and its
   passive turns off.
 
-A companion only obeys its owner, and companions won't attack each other (your fox won't hunt your
-rabbit).
+A companion only obeys its owner, and tamed animals stay out of combat entirely. **Nothing wild hunts
+your companions** — a wild fox or wolf (or a hostile mob) won't target your tamed rabbit. And **your
+companions won't hunt anything** — a tamed fox, ocelot, or axolotl stays at your side instead of
+chasing wild chickens or fish, so taming a predator calms it down. (The frog's tongue is the one
+playful exception — it'll still snap up a nearby slime.)
 
 ## Advancements
 

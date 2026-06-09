@@ -17,21 +17,6 @@ not tasks.
   follow heights.
   → `companion/bat/BatCompanion.java` · `followOwner`
 
-- [ ] **Wild predators still hunt tamed prey** · `combat` · M
-  `MobCanAttackMixin` only stops a *companion* attacking another *companion* (so the companion fox no longer
-  kills the owner's rabbit). A *wild* fox/wolf can still hunt a tamed rabbit/companion.
-  *Idea:* protect companions from all non-owned attackers, or make tamed prey not match predator targeting
-  selectors.
-  → `mixin/MobCanAttackMixin.java`
-
-- [ ] **Tamed predators still hunt wild prey** · `combat` · M
-  The mirror of the above: `MobCanAttackMixin` stops companion-vs-companion, but a *tamed* predator (a
-  companion fox, ocelot, axolotl…) can still hunt *wild* prey — wandering off after wild chickens / rabbits
-  / fish instead of staying with the owner.
-  *Idea:* suppress a companion's hunt/attack targeting on non-owned prey while owned (or at least while
-  following), or strip its attack goals on taming — mirroring the flee-suppress.
-  → `mixin/MobCanAttackMixin.java`
-
 - **Fox fetch edges** · `fox`
   The fox pathfinds to the nearest item (`FoxFetchItemGoal`) and acts as a ~1.5-block *mobile magnet*
   centred on itself — items in the bubble go to the owner via `playerTouch`; its `canPickUpLoot` is off so
