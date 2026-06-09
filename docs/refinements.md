@@ -53,6 +53,15 @@ Choices we've made, not tasks. Revisit only if they annoy in practice.
 - **Night Vision granted by both the bat and the axolotl** — intentional, not a duplicate to dedupe. The
   bat is a land/cave light source (it won't dive); the axolotl carries that vision *underwater*, where it
   pairs with the turtle's Water Breathing. Same effect, two non-overlapping use contexts.
+- **Rideable sheep makes the mod client+server, and `SheepMixin` stays a *common* mixin** — every other
+  feature is server-authoritative and works for a vanilla client (attach-to-vanilla design: no custom
+  registries to sync). The sheep's ridden steering + charged jump are the exception: the controlling client
+  computes them (`LocalPlayer.jumpableVehicle()` does `instanceof PlayerRideableJumping`; the jump impulse in
+  `tickRidden` is gated by `isLocalInstanceAuthoritative()`), so the mod is required client-side for that one
+  feature. Do **not** move `SheepMixin` to `src/client` — the *server* also needs the
+  `getControllingPassenger`/`PlayerRideableJumping` overrides to route ridden movement, show correct motion to
+  other players, and receive the jump packet (vanilla `AbstractHorse` is likewise a common class). The
+  client-coupling is a runtime branch, not a code-location concern. → `mixin/SheepMixin.java`
 
 ## How to use this file
 
