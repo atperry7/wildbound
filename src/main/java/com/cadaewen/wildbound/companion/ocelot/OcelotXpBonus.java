@@ -31,11 +31,13 @@ public final class OcelotXpBonus {
         if (ocelot == null) {
             return amount;
         }
-        // Sparkle at the ocelot so the otherwise-invisible bonus is visible. Throttled so XP grinding
-        // doesn't spam particles.
+        // Sparkle at the ocelot so the otherwise-invisible bonus is visible. Particle-only and throttled:
+        // XP is awarded too often for a sound (it would be grind-spam), and 1-in-4 keeps a burst of orbs
+        // reading as a flurry without flooding. The count/spread are tuned up from a near-invisible 3 so the
+        // cue actually lands; the bonus has no other indicator.
         if (player.getRandom().nextInt(4) == 0 && ocelot.level() instanceof ServerLevel level) {
-            level.sendParticles(ParticleTypes.HAPPY_VILLAGER, ocelot.getX(), ocelot.getY() + 0.6, ocelot.getZ(),
-                    3, 0.3, 0.4, 0.3, 0.0);
+            level.sendParticles(ParticleTypes.HAPPY_VILLAGER, ocelot.getX(), ocelot.getY() + 0.7, ocelot.getZ(),
+                    8, 0.4, 0.5, 0.4, 0.0);
         }
         return amount * 2;
     }
