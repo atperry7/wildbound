@@ -53,7 +53,9 @@ public class CompanionFollowOwnerGoal extends Goal {
         if (!CompanionBehavior.isFollowing(mob)) {
             return false;
         }
-        return owner != null && owner.isAlive() && mob.distanceToSqr(owner) > stopDistSqr;
+        // Mirror canUse's spectator check so an owner switching to spectator mid-chase isn't pursued.
+        return owner != null && owner.isAlive() && !owner.isSpectator()
+                && mob.distanceToSqr(owner) > stopDistSqr;
     }
 
     @Override

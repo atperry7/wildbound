@@ -53,7 +53,9 @@ public class BatCompanion extends CompanionType {
         if (mode == CompanionMode.WANDER) {
             return leashWander(bat);
         }
-        if (mode == CompanionMode.SIT || owner == null) {
+        // A spectator owner reads as absent: the bat perches instead of chasing (and teleporting after)
+        // a player who may be flying through walls — the teleport has no collision check.
+        if (mode == CompanionMode.SIT || owner == null || owner.isSpectator()) {
             hangOrHover(bat, level);
         } else {
             followOwner(bat, owner);

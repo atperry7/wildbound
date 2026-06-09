@@ -34,15 +34,19 @@ public final class CompanionCapture {
     }
 
     /**
-     * Build a loaded {@code bound_cluster} holding {@code mob}'s serialized state. The caller is responsible
-     * for removing the live mob — build the stack first and only then {@code discard()}, never the reverse,
-     * so a serialization failure can never destroy the companion.
+     * Build a loaded {@code bound_cluster} holding {@code mob}'s serialized state, or {@code null} if the
+     * mob cannot be serialized — {@code Entity.save} refuses a passenger (returns false having written
+     * nothing), so capturing a companion riding a boat/minecart would otherwise build an empty cluster.
+     * The caller is responsible for removing the live mob — build the stack first and only then
+     * {@code discard()}, never the reverse, and on {@code null} keep both the mob and the cluster.
      */
     public static ItemStack capture(Mob mob) {
         try (ProblemReporter.ScopedCollector reporter =
                 new ProblemReporter.ScopedCollector(mob.problemPath(), Wildbound.LOGGER)) {
             TagValueOutput out = TagValueOutput.createWithContext(reporter, mob.registryAccess());
-            mob.save(out);
+            if (!mob.save(out)) {
+                return null;
+            }
             CompoundTag tag = out.buildResult();
             ItemStack stack = new ItemStack(ModItems.BOUND_CLUSTER);
             stack.set(ModComponents.BOUND_ENTITY, CustomData.of(tag));

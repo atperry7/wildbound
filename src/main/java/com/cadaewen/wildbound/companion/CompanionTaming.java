@@ -100,7 +100,9 @@ public final class CompanionTaming {
                 return InteractionResult.PASS;
             }
             // Don't pocket a mount that's carrying a rider (e.g. a ridden sheep) — it would strand the rider.
-            if (mob.isVehicle()) {
+            // And don't pocket a companion riding something (boat, minecart): Entity.save refuses to
+            // serialize a passenger, so capture would build an empty cluster while the pet is discarded.
+            if (mob.isVehicle() || mob.isPassenger()) {
                 return InteractionResult.PASS;
             }
             if (level.isClientSide()) {
@@ -110,6 +112,10 @@ public final class CompanionTaming {
             // Serialize into the item FIRST, then remove the live mob — never the reverse, so a failed
             // capture can't destroy the companion.
             ItemStack bound = CompanionCapture.capture(mob);
+            if (bound == null) {
+                // Serialization refused — keep the live mob and the cluster; nothing happens.
+                return InteractionResult.FAIL;
+            }
             spawnParticles(serverLevel, mob, new DustParticleOptions(0xAA22FF, 1.0f));
             serverLevel.playSound(null, mob.getX(), mob.getY(), mob.getZ(),
                     SoundEvents.AMETHYST_BLOCK_CHIME, SoundSource.NEUTRAL, 1.0f, 0.8f);

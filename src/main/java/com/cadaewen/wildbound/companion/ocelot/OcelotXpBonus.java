@@ -1,5 +1,7 @@
 package com.cadaewen.wildbound.companion.ocelot;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.UUID;
 
 import com.cadaewen.wildbound.companion.CompanionBehavior;
@@ -13,12 +15,12 @@ import net.minecraft.world.entity.Mob;
 /** The Ocelot passive: doubles XP a player receives while a following (non-sitting) tamed ocelot is nearby. */
 public final class OcelotXpBonus {
 
-    // Single-entry cache so several XP awards in the same server tick (a burst of orbs, grinding) share one
-    // nearby-entity scan instead of rescanning per award. XP is granted only on the server thread, so a
-    // plain static cache is safe; it is re-resolved whenever the player or game-time changes.
-    private static UUID cachedPlayerId;
+    // Per-tick cache so several XP awards in the same server tick (a burst of orbs, grinding) share one
+    // nearby-entity scan per player. Keyed per player so two players grinding in the same tick don't evict
+    // each other's entry; cleared whenever the game-time advances, so no Mob reference outlives its tick.
+    // XP is granted only on the server thread, so the plain static state is safe.
     private static long cachedGameTime = Long.MIN_VALUE;
-    private static Mob cachedOcelot;
+    private static final Map<UUID, Mob> cachedOcelots = new HashMap<>();
 
     private OcelotXpBonus() {
     }
@@ -42,14 +44,19 @@ public final class OcelotXpBonus {
         return amount * 2;
     }
 
-    /** The owner's active ocelot, resolved at most once per server tick (see the cache fields above). */
+    /** The player's active ocelot, resolved at most once per player per server tick (see the cache above). */
     private static Mob activeOcelot(ServerPlayer player) {
         long now = player.level().getGameTime();
-        if (now != cachedGameTime || !player.getUUID().equals(cachedPlayerId)) {
+        if (now != cachedGameTime) {
             cachedGameTime = now;
-            cachedPlayerId = player.getUUID();
-            cachedOcelot = CompanionBehavior.findActiveCompanion(player, EntityType.OCELOT);
+            cachedOcelots.clear();
         }
-        return cachedOcelot;
+        UUID id = player.getUUID();
+        // containsKey rather than computeIfAbsent: "no ocelot nearby" (null) is the common case and must
+        // cache too, or every award without an ocelot would rescan.
+        if (!cachedOcelots.containsKey(id)) {
+            cachedOcelots.put(id, CompanionBehavior.findActiveCompanion(player, EntityType.OCELOT));
+        }
+        return cachedOcelots.get(id);
     }
 }
