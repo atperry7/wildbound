@@ -31,7 +31,10 @@ public class BeeCompanion extends CompanionType {
 
     @Override
     public boolean isTamingItem(ItemStack stack) {
-        return stack.is(ItemTags.FLOWERS);
+        // Any flower tames a bee, EXCEPT the Golden Dandelion: it's in minecraft:flowers but carries a
+        // vanilla age-lock ("halts aging") interaction we don't want to swallow, and it's earmarked as a
+        // companion buff-toggle item. Excluding it keeps that item's vanilla meaning intact on bees.
+        return stack.is(ItemTags.FLOWERS) && !stack.is(Items.GOLDEN_DANDELION);
     }
 
     @Override
