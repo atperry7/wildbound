@@ -43,6 +43,17 @@ not tasks.
   *Idea:* shared "aquatic follow" helper for axolotl + turtle.
   → `companion/turtle/TurtleCompanion.java`
 
+## Verify in-game
+
+- **Sheep mount: charged jump + water float** `[subsystem: sheep] [S]` — compiles and loads clean
+  (headless `runServer` applies `SheepMixin`'s new `PlayerRideableJumping` and merges the
+  `can_float_while_ridden` tag with no errors), but needs an in-client pass:
+  - Confirm a **full** jump charge reliably lands the rider onto a **two-block** ledge (impulse
+    `WILDBOUND_JUMP_STRENGTH = 0.6` in `SheepMixin`; bump if it falls short, trim if it overshoots).
+    Check the charge bar shows while mounted and a tap gives a low hop, not a launch.
+  - Confirm riding into water **bobs to the surface and paddles across** (slower than on land) instead of
+    sinking, and that a free-roaming companion sheep is unaffected (vanilla water behaviour).
+
 ## Needs a decision
 
 _(none open)_

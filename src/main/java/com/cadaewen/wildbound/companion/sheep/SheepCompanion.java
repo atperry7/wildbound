@@ -16,8 +16,10 @@ import net.minecraft.world.item.Items;
  * Sheep companion: tamed with an <b>apple</b>. Its "passive" is not a status effect but the ability to be
  * <b>ridden</b> — an empty-hand right-click by the owner hops them on (no saddle required), and from there the
  * sheep steers with the rider's movement keys and look. The actual steering — making the sheep a controllable
- * vehicle, faster than a sprinting player, with a horse's step height so single blocks need no jump — lives in
- * {@code SheepMixin}; this type only wires the taming item and the mount gesture.
+ * vehicle, faster than a sprinting player, with a horse's step height so single blocks need no jump, a
+ * horse-style charged jump for two-block ledges, and surface-floating across water — lives in {@code SheepMixin}
+ * (plus the {@code can_float_while_ridden} entity-type tag for the water float); this type only wires the
+ * taming item and the mount gesture.
  *
  * <p>{@link #passiveEffect()} is therefore {@code null} (the per-tick effect path does nothing for the sheep).
  */

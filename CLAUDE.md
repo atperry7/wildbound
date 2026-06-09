@@ -124,6 +124,22 @@ the mob on taming. This keeps entity identity stable and avoids renderer/attribu
     is free**: vanilla `LivingEntity.maxUpStep()` already returns ≥1.0 (horse-tier) whenever a Player controls
     the mob, so single blocks need no jump. Control is gated only on the first passenger being a `Player`
     (works client-side, unlike the server-only owner attachment) — the owner gate lives in the mount interaction.
+    - **Charged jump (two-block ledges).** `SheepMixin` also `implements PlayerRideableJumping` — that's the
+      *only* hook the client needs: `LocalPlayer.jumpableVehicle()` checks `instanceof PlayerRideableJumping`,
+      then shows the jump-charge bar and on release sends the charge to the server **and** calls
+      `onPlayerJump`. We stash the charge (`getPlayerJumpPendingScale`, 0.4…1.0) and apply the impulse
+      client-authoritatively in `tickRidden` (`isLocalInstanceAuthoritative() && onGround()`), mirroring
+      `AbstractHorse`. Full-charge impulse `WILDBOUND_JUMP_STRENGTH = 0.6` clears ~2.2 blocks (onto a two-high
+      ledge with margin); a forward boost when `riddenInput.z > 0` carries the rider over rather than straight
+      up. No `JUMP_STRENGTH` attribute (sheep lacks it) — the impulse is computed directly. **Adding the
+      interface is a Mixin feature** (interfaces on the mixin class merge into the target); a headless
+      `runServer` confirms it applies.
+    - **Floats on water (paddle, ridden-only).** *No code* — vanilla `LivingEntity.floatInWaterWhileRidden`
+      (+0.04 Y/tick while `isVehicle()` and submerged past the fluid-jump threshold) plus normal water-slowdown
+      already gives "bob to the surface and paddle across slower." It's gated on the
+      `minecraft:can_float_while_ridden` entity-type tag (horses, camels, …); we just add `minecraft:sheep` to
+      it via `data/minecraft/tags/entity_type/can_float_while_ridden.json` (tags merge, so the vanilla mounts
+      stay). A free-roaming companion sheep is untouched (not a vehicle).
 
 ### Sit poses
 
@@ -156,8 +172,8 @@ merges the ridden-control overrides into `Sheep`.
 (goalSelector accessor + `getAmbientSound` invoker for the mob-voiced mode-toggle cue), `MobCanAttackMixin`
 (companions stay out of mob combat — untargetable as prey,
 pacified as predators), `ServerPlayerExperienceMixin`
-(ocelot XP), `FoxAccessor` (`setSleeping`), `SheepMixin` (rideable-sheep ridden control). Keep this list
-sorted and in sync with the `mixin/` package.
+(ocelot XP), `FoxAccessor` (`setSleeping`), `SheepMixin` (rideable-sheep ridden control + `PlayerRideableJumping`
+charged jump). Keep this list sorted and in sync with the `mixin/` package.
 
 ## Gotchas learned
 
