@@ -20,8 +20,13 @@ Natural per-animal pose on sit, via `CompanionType` hooks driven by `CompanionSi
 - **Wander leash** — anchors where set, kept within `wanderRadius` (default 12); no boundary jitter. ✅
 - **"Home on the Range" advancement** — fires on first wander to teach the control. ✅
 - **Milk-bucket buff toggle** — RC a companion with milk to quiet/restore its passive (`BUFF_DISABLED`). ✅
-- **Colored mode-toggle cue** — dust puff + rising chime per mode (white = sit, purple = wander, gold =
-  follow), via `CompanionTaming.announceModeToggle`. ✅
+- **Colored mode-toggle cue** — dust puff per mode (white = sit, purple = wander, gold = follow) via
+  `CompanionTaming.announceModeToggle`; the colour is the unambiguous confirmation. ✅
+- **Mode toggle voiced by the mob itself** — replaced the shared amethyst chime with each companion's own
+  vanilla ambient sound (a sheep baas, a frog croaks), via a `CompanionType.modeToggleSound` hook defaulting
+  to the mob's `getAmbientSound` (new `MobAccessor` invoker). Silent mobs (e.g. turtle → null) show just the
+  particles. Played at the mob's sound source with the vanilla baby-pitch bump; mode is carried by the
+  particle colour, so the sound is pure flavour. ✅
 
 ## Indicators
 
@@ -29,8 +34,8 @@ Natural per-animal pose on sit, via `CompanionType` hooks driven by `CompanionSi
 
 ## Advancements
 
-- **Taming-item hint** — each per-animal advancement's icon is its taming item, so the badge hints what
-  to use. ✅
+- **Per-animal advancement icons** — each per-animal advancement's icon is that animal's signature food
+  (`CompanionType.tamingItem()`), kept for flavour even after taming went universal. ✅
 - **Menagerie sub-node** — inserted `menagerie.json` (*A Growing Menagerie*) as a quiet hub under `root`;
   re-parented all ten per-animal advancements and the capstone under it, so the capstone reads as the
   visible culmination of the animal cluster instead of a bare sibling of `root`. Teaching nodes (`wander`,
@@ -39,9 +44,25 @@ Natural per-animal pose on sit, via `CompanionType` hooks driven by `CompanionSi
 - **Capstone covers every companion** — `wild_knows_your_name` was missing `sheep` (required 9 of 10);
   added it so "tame one of every kind" really means all ten. ✅
 - **Root as a discovery hint** — `root` ("Wildbound") now fires from vanilla `minecraft:inventory_changed`
-  the moment the player first picks up *any* taming item, with a description that teaches the mechanic, so
-  the tree surfaces the mod before the first tame. The first-tame beat moved to `menagerie` (toast/announce
-  re-enabled). Onboarding escalation: get the food → first bond → collect → capstone. ✅
+  the moment the player first picks up the universal taming item (an amethyst shard), with a description that
+  teaches the mechanic, so the tree surfaces the mod before the first tame. The first-tame beat moved to
+  `menagerie` (toast/announce re-enabled). Onboarding escalation: get the shard → first bond → collect →
+  capstone. ✅
+
+## Roster & taming
+
+- **Turtle companion** — 11th companion; grants Water Breathing I (the shell's gift, like the turtle
+  helmet). A `PathfinderMob`, so it rides the shared follow/sit/wander goals with no mixin. Added its
+  `menagerie`-parented advancement and the matching capstone entry. ✅
+- **Axolotl → Night Vision** — moved Water Breathing to the turtle and gave the axolotl Night Vision, an
+  underwater-vision companion the land-bound bat can't be (the bat won't dive). Deliberately shares the
+  bat's effect; the two cover non-overlapping contexts (caves vs. depths). ✅
+- **Universal taming item (amethyst shard)** — replaced every per-animal taming food with one item,
+  `CompanionTaming.TAMING_ITEM`. One-stack taming kit, and because amethyst is no mob's breeding food and
+  has no vanilla mob right-click, taming no longer hijacks breeding (or any vanilla gesture) — wild animals
+  breed normally again. `CompanionType.tamingItem()` survives as advancement-icon flavour only; the bee's
+  flower-tag / golden-dandelion-exclusion and the ocelot's cod-or-salmon overrides are gone. `root.json`
+  now keys off the single amethyst-shard pickup. ✅
 
 ## Combat
 

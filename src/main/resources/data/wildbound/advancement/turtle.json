@@ -1,0 +1,19 @@
+{
+  "parent": "wildbound:menagerie",
+  "display": {
+    "icon": { "id": "minecraft:seagrass" },
+    "title": { "text": "Below the Surface" },
+    "description": { "text": "Breathe deep — the ocean floor is yours to explore." },
+    "show_toast": true,
+    "announce_to_chat": true
+  },
+  "criteria": {
+    "tamed_turtle": {
+      "trigger": "wildbound:companion_tamed",
+      "conditions": { "animal_type": "minecraft:turtle" }
+    }
+  },
+  "requirements": [
+    ["tamed_turtle"]
+  ]
+}

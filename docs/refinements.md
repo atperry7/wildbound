@@ -36,6 +36,13 @@ not tasks.
   *Idea:* prefer water teleport targets.
   → `companion/axolotl/AxolotlCompanion.java`
 
+- [ ] **Turtle follow feel (play-test)** · `turtle` · M
+  Turtles are very slow on land and have vanilla "home beach" pathing, so a following turtle trails far
+  behind and may tug toward its home. Compiles + loads (11 companions); never tried in-client. Same family
+  as the axolotl land-follow item — likely wants water-preferred teleport and/or a speed nudge while following.
+  *Idea:* shared "aquatic follow" helper for axolotl + turtle.
+  → `companion/turtle/TurtleCompanion.java`
+
 ## Needs a decision
 
 _(none open)_
@@ -50,6 +57,9 @@ Choices we've made, not tasks. Revisit only if they annoy in practice.
   fades at natural expiry. *Optional:* a death hook for a prompt clear.
 - **Frog tongue snatches nearby slimes/small mobs** — characterful vanilla behaviour, left in; note it can
   eat baby mobs. Suppress only if it proves annoying.
+- **Night Vision granted by both the bat and the axolotl** — intentional, not a duplicate to dedupe. The
+  bat is a land/cave light source (it won't dive); the axolotl carries that vision *underwater*, where it
+  pairs with the turtle's Water Breathing. Same effect, two non-overlapping use contexts.
 
 ## How to use this file
 

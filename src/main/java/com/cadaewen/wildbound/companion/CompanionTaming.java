@@ -15,6 +15,7 @@ import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.Level;
@@ -25,6 +26,14 @@ import net.minecraft.world.phys.EntityHitResult;
  * {@code interactMob} mixin is needed.
  */
 public final class CompanionTaming {
+
+    /**
+     * The single item that tames every companion. One universal tamer (rather than each animal's own
+     * food) keeps a player's taming kit to one stack and — because amethyst is no mob's breeding food and
+     * has no vanilla right-click-on-mob interaction — guarantees taming never swallows breeding or any other
+     * vanilla gesture. Each {@link CompanionType#tamingItem()} survives only as the animal's advancement icon.
+     */
+    public static final Item TAMING_ITEM = Items.AMETHYST_SHARD;
 
     private CompanionTaming() {
     }
@@ -56,7 +65,7 @@ public final class CompanionTaming {
                     return handled;
                 }
                 CompanionMode newMode = toggleMode(mob, player.isShiftKeyDown());
-                announceModeToggle(serverPlayer.level(), mob, newMode);
+                announceModeToggle(serverPlayer.level(), mob, newMode, type);
                 if (newMode == CompanionMode.WANDER) {
                     ModCriteria.COMPANION_WANDERED.trigger(serverPlayer);
                 }
@@ -82,9 +91,9 @@ public final class CompanionTaming {
             return InteractionResult.SUCCESS;
         }
 
-        // Taming attempt: holding the right item on an untamed animal. A config-disabled type is skipped
-        // here so it behaves like a plain wild animal (already-tamed companions are unaffected).
-        if (!tamed && CompanionRegistry.isEnabled(mob.getType()) && type.isTamingItem(held)) {
+        // Taming attempt: holding the universal taming item on an untamed animal. A config-disabled type is
+        // skipped here so it behaves like a plain wild animal (already-tamed companions are unaffected).
+        if (!tamed && CompanionRegistry.isEnabled(mob.getType()) && held.is(TAMING_ITEM)) {
             if (level.isClientSide()) {
                 return InteractionResult.SUCCESS;
             }
@@ -134,22 +143,26 @@ public final class CompanionTaming {
     }
 
     /**
-     * Per-mode toggle cue: a puff of the mode's signature colour plus a chime whose pitch rises with
-     * engagement (sit → wander → follow). Mirrors {@link #announceBuffToggle} so every companion-state
-     * change reads the same way, and the colour is distinct enough to recall what you set a pet to after
-     * the fact — white = SIT, purple = WANDER, gold = FOLLOW.
+     * Per-mode toggle cue: a puff of the mode's signature colour — white = SIT, purple = WANDER, gold =
+     * FOLLOW — which is the unambiguous "I registered your click" confirmation, plus the companion's own
+     * vanilla voice (a sheep baas, a frog croaks) as flavour. The colour carries the mode, so the sound no
+     * longer needs to; a silent mob (e.g. a turtle, {@code modeToggleSound} == null) shows just the particles.
      */
-    private static void announceModeToggle(ServerLevel level, Mob mob, CompanionMode mode) {
+    private static void announceModeToggle(ServerLevel level, Mob mob, CompanionMode mode, CompanionType type) {
         int color;
-        float pitch;
         switch (mode) {
-            case SIT -> { color = 0xFFFFFF; pitch = 0.7f; }     // white, low
-            case WANDER -> { color = 0xAA22FF; pitch = 1.0f; }  // purple, mid
-            default -> { color = 0xFFC400; pitch = 1.4f; }      // gold (FOLLOW), high
+            case SIT -> color = 0xFFFFFF;       // white
+            case WANDER -> color = 0xAA22FF;    // purple
+            default -> color = 0xFFC400;        // gold (FOLLOW)
         }
         spawnParticles(level, mob, new DustParticleOptions(color, 1.0f));
-        level.playSound(null, mob.getX(), mob.getY(), mob.getZ(), SoundEvents.AMETHYST_BLOCK_CHIME,
-                SoundSource.NEUTRAL, 1.0f, pitch);
+        SoundEvent voice = type.modeToggleSound(mob);
+        if (voice != null) {
+            // Voiced like the mob would: its own sound source, from its position, with the vanilla baby
+            // pitch bump. (We can't reach LivingEntity.makeSound via an invoker — see MobAccessor.)
+            float pitch = mob.isBaby() ? 1.5f : 1.0f;
+            level.playSound(null, mob.getX(), mob.getY(), mob.getZ(), voice, mob.getSoundSource(), 1.0f, pitch);
+        }
     }
 
     /** Small aud/visual cue for a buff toggle: a smoke puff + low chime when quieted, sparkle + bright chime when restored. */

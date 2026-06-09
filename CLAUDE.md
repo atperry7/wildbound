@@ -47,14 +47,19 @@ the mob on taming. This keeps entity identity stable and avoids renderer/attribu
     **bat** has no goals, so it leashes itself in `BatCompanion.leashWander` (steer back when outside the
     radius, else cede to vanilla flight). NB the home-point API is on `Mob` and named
     `setHomeTo`/`hasHome`/`getHomePosition`/`clearHome` this version.
-- **Per-animal definition** — subclass `CompanionType` (taming item/predicate, passive effect + amplifier,
-  taming chance, sit-pose hooks) and register it in `CompanionRegistry` keyed by `EntityType`. Amplifier and
-  taming chance are mutable fields with config setters (see Config below); the rest is behaviour.
+- **Per-animal definition** — subclass `CompanionType` (passive effect + amplifier, taming chance, sit-pose
+  hooks) and register it in `CompanionRegistry` keyed by `EntityType`. Amplifier and taming chance are mutable
+  fields with config setters (see Config below); the rest is behaviour. `tamingItem()` no longer gates taming
+  (see below) — it only supplies the animal's **advancement icon**.
 - **Shared runtime** — `CompanionBehavior` (ownership/mode access, the per-tick driver `serverTick`, the
   passive-effect refresh, and `findActiveCompanion`/`hasActiveCompanion`).
 - **Taming + mode toggle** — `CompanionTaming` via Fabric `UseEntityCallback` (no per-animal interact mixin).
-  Empty-hand RC toggles SIT↔FOLLOW; **sneak**+empty-hand RC toggles WANDER↔FOLLOW. Held-item interactions
-  stay free for future per-companion actions. Taming is gated by `CompanionRegistry.isEnabled`.
+  **Every companion is tamed with one universal item — `CompanionTaming.TAMING_ITEM` (amethyst shard).** A
+  single tamer keeps the player's kit to one stack and, because amethyst is no mob's breeding food and has no
+  vanilla right-click-on-mob interaction, taming never swallows breeding (or any other gesture) — so a wild
+  animal still breeds normally even though its old food once tamed it. Taming is gated by
+  `CompanionRegistry.isEnabled`. Empty-hand RC toggles SIT↔FOLLOW; **sneak**+empty-hand RC toggles
+  WANDER↔FOLLOW. Held-item interactions (other than the universal tamer / milk) stay free for future actions.
 - **Config** — `config/WildboundConfig.java` reads `config/wildbound.json` once at init (generated from
   defaults if missing) and applies per-mob `enabled` (→ `CompanionRegistry.setEnabled`), `tamingChanceOneInN`,
   `effectAmplifier`, and `wanderRadius` (→ the matching `CompanionType` setters, all clamped). Flicker
@@ -64,9 +69,9 @@ the mob on taming. This keeps entity identity stable and avoids renderer/attribu
   `CompanionWanderedTrigger` (`wildbound:companion_wandered`, when a companion is first set to wander). JSON in
   `src/main/resources/data/wildbound/advancement/` (folder is singular `advancement` this version).
   - **Tree shape (progressive reveal).** `root` ("Wildbound") is **not** a tame trigger — it fires from
-    vanilla `minecraft:inventory_changed` when the player first picks up *any* taming item (item list +
-    `#minecraft:flowers` tag, OR'd in one `requirements` group), so the tree hints at the mod *before* the
-    first tame and its description teaches the mechanic. `menagerie` ("A Growing Menagerie") fires on the
+    vanilla `minecraft:inventory_changed` when the player first picks up the universal taming item (an
+    **amethyst shard**), so the tree hints at the mod *before* the first tame and its description teaches the
+    mechanic. (Pre-universal-tamer this was an OR'd list of every per-animal food + the flowers tag.) `menagerie` ("A Growing Menagerie") fires on the
     first `companion_tamed` and is the **parent of every per-animal advancement and the capstone** (MC
     advancements are single-parent, so the animals can't each line into the capstone — this makes it read as
     the culmination of that cluster). `wander`/`quiet` (teaching advancements) hang off `root`.
@@ -96,11 +101,11 @@ the mob on taming. This keeps entity identity stable and avoids renderer/attribu
 - Apply with the **6-arg** `MobEffectInstance(..., ambient=true, visible=false, showIcon=true)`. The 5-arg
   form sets `showIcon = visible`, which would hide the HUD icon (the buff's only indicator).
 - **Three companions have non-effect passives** (`passiveEffect()` is `null`; the work runs elsewhere):
-  - **Ocelot** (tamed with raw cod/salmon): XP ×2. The bonus is `ServerPlayerExperienceMixin`
+  - **Ocelot**: XP ×2. The bonus is `ServerPlayerExperienceMixin`
     (`@ModifyVariable` on `giveExperiencePoints`) gated by
     `CompanionBehavior.hasActiveCompanion(player, EntityType.OCELOT)`; `OcelotXpBonus` does the doubling +
     sparkle. (Was the fox's passive originally.)
-  - **Fox** (tamed with sweet berries): fetches nearby dropped items into the owner's inventory.
+  - **Fox**: fetches nearby dropped items into the owner's inventory.
     `FoxFetchItemGoal` (attached via the `CompanionType.attachGoals` hook, priority 1, just under follow's 0)
     pathfinds the fox to the nearest `ItemEntity` within 8 blocks, then acts as a **mobile magnet** — every
     item within a ~1.5-block bubble *around the fox* (not the player) is sent to the owner via vanilla
@@ -111,7 +116,7 @@ the mob on taming. This keeps entity identity stable and avoids renderer/attribu
     status passive — following, in range, not milk-quieted; follow outranks it so a fox that falls behind
     catches up first, bounding how far it strays. `FoxCompanion.serverTickBehavior` turns off the companion
     fox's vanilla `canPickUpLoot` so the goal is the sole collector (items go to the owner, not its mouth).
-  - **Sheep** (tamed with an apple): **rideable, no saddle**. An owner's plain empty-hand RC mounts it (via the
+  - **Sheep**: **rideable, no saddle**. An owner's plain empty-hand RC mounts it (via the
     new `CompanionType.onOwnerEmptyHandUse` hook — a rideable companion repurposes the SIT slot for mounting;
     sneak-RC still parks it via WANDER). `SheepMixin` adds the pig/horse-style ridden-control overrides
     (`getControllingPassenger`/`getRiddenInput`/`tickRidden`/`getRiddenSpeed`) so the player steers it with
@@ -130,13 +135,14 @@ to land (`controlsSitMovement`).
 ## Adding a new companion
 
 Ground/flying/swimming `PathfinderMob`:
-1. `companion/<animal>/<Animal>Companion.java` extends `CompanionType` (taming item + `passiveEffect`).
+1. `companion/<animal>/<Animal>Companion.java` extends `CompanionType` (`tamingItem()` = advancement icon +
+   `passiveEffect`). Taming is the universal item, so `tamingItem()` is cosmetic — no need to pick a unique one.
 2. Register it in `CompanionRegistry.init()`.
 3. Add `src/main/resources/data/wildbound/advancement/<animal>.json` (parent `wildbound:menagerie`, **not**
    `root`), **and** add a `companion_tamed` criterion + `requirements` entry for the new type to
    `wild_knows_your_name.json` — the capstone is a hand-maintained per-animal list, so skipping this quietly
-   drops the animal from "tame one of every kind" (how sheep got missed). If the new taming item isn't
-   already covered by `root.json`'s `inventory_changed` list, add it there too so the hint still fires.
+   drops the animal from "tame one of every kind" (how sheep got missed). `root.json` needs **no** change —
+   it keys off the single universal taming item, not per-animal foods.
 4. Optional: override sit-pose hooks for a natural pose, or `attachGoals` for type-specific goals (the fox's
    item fetch is the example). **No mixin needed** — `ENTITY_LOAD` attaches the shared + per-type goals.
 
@@ -147,7 +153,8 @@ merges the ridden-control overrides into `Sheep`.
 ## Mixins (`wildbound.mixins.json`)
 
 `AvoidEntityGoalMixin` (companions don't flee players), `BatMixin` (bat AI step), `MobAccessor`
-(goalSelector), `MobCanAttackMixin` (companions stay out of mob combat — untargetable as prey,
+(goalSelector accessor + `getAmbientSound` invoker for the mob-voiced mode-toggle cue), `MobCanAttackMixin`
+(companions stay out of mob combat — untargetable as prey,
 pacified as predators), `ServerPlayerExperienceMixin`
 (ocelot XP), `FoxAccessor` (`setSleeping`), `SheepMixin` (rideable-sheep ridden control). Keep this list
 sorted and in sync with the `mixin/` package.
@@ -158,7 +165,13 @@ sorted and in sync with the `mixin/` package.
   but a ground perch's rest height is an integer, so a dip below it yanks the bat a block down. Snap to a
   stable resting Y before setting `resting` (`BatCompanion.settleTo`).
 - Recurring **port 25565 in use** during back-to-back `runServer` tests = a leftover dev server. Kill
-  `net.minecraft`/`GradleWrapperMain` (and free the port) between runs; it's not a mod error.
+  `net.minecraft`/`GradleWrapperMain` (and free the port) between runs; it's not a mod error. (A leftover
+  server also holds `run/world/session.lock`, so the next boot dies with `LockException` — same cleanup.)
+- An **`@Invoker` only resolves methods declared on the `@Mixin` target class, not inherited ones** — same
+  trap as `@Shadow` on inherited fields. `@Invoker("makeSound")` on `@Mixin(Mob.class)` fails at apply time
+  (`InvalidAccessorException: No candidates`) because `makeSound` lives on `LivingEntity`. Either target the
+  declaring class or, as the mode-toggle cue does, just call public API (`Level.playSound`) instead.
+  **Catch this with a headless `runServer`** — it compiles fine and only blows up at mixin-apply.
 
 ## Docs & conventions
 

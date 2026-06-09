@@ -2,8 +2,8 @@
   "parent": "wildbound:menagerie",
   "display": {
     "icon": { "id": "minecraft:tropical_fish" },
-    "title": { "text": "Below the Surface" },
-    "description": { "text": "The deep is no longer off limits." },
+    "title": { "text": "Eyes in the Dark" },
+    "description": { "text": "The lightless depths hold no secrets now." },
     "show_toast": true,
     "announce_to_chat": true
   },

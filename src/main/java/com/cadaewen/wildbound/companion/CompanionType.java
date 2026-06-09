@@ -1,8 +1,11 @@
 package com.cadaewen.wildbound.companion;
 
+import com.cadaewen.wildbound.mixin.MobAccessor;
+
 import net.minecraft.core.Holder;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.sounds.SoundEvent;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.effect.MobEffect;
 import net.minecraft.world.effect.MobEffectInstance;
@@ -11,7 +14,6 @@ import net.minecraft.world.entity.PathfinderMob;
 import net.minecraft.world.entity.ai.goal.GoalSelector;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
-import net.minecraft.world.item.ItemStack;
 
 /**
  * Describes one tameable animal. Adding a companion means subclassing this and registering it in
@@ -37,16 +39,25 @@ public abstract class CompanionType {
     /** Default leash radius (blocks) for a wandering companion. Per-mob config may change it. */
     public static final int DEFAULT_WANDER_LEASH_RADIUS = 12;
 
-    /** The vanilla item used to tame this animal (also the representative item for tag-based tamers). */
+    /**
+     * The animal's signature food, used purely as the icon for its advancement. Taming itself goes through
+     * the single universal item ({@link CompanionTaming#TAMING_ITEM}), so this no longer gates taming — it
+     * just keeps each advancement reading as that animal's flavour (bamboo for panda, a flower for bee, …).
+     */
     public abstract Item tamingItem();
-
-    /** Whether the given held stack can tame this animal. Override for tag-based items (e.g. any flower). */
-    public boolean isTamingItem(ItemStack stack) {
-        return stack.is(tamingItem());
-    }
 
     /** Status effect granted while following, or {@code null} for special-case companions (e.g. Fox XP). */
     public abstract Holder<MobEffect> passiveEffect();
+
+    /**
+     * Sound played when this companion's mode is toggled (sit/wander/follow), or {@code null} to fall back to
+     * the particle cue alone. Defaults to the mob's own vanilla ambient voice — a sheep baas, a frog croaks —
+     * so the feedback fits each animal instead of a shared synthetic chime. A type may override to pick a
+     * cleaner or more distinctive sound. The caller voices it from the mob's own sound source/position.
+     */
+    public SoundEvent modeToggleSound(Mob mob) {
+        return ((MobAccessor) mob).wildbound$getAmbientSound();
+    }
 
     /** Default effect amplifier (Level I). Per-mob config may raise it via {@link #setPassiveAmplifier}. */
     public static final int DEFAULT_AMPLIFIER = 0;

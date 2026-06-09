@@ -5,13 +5,11 @@ import com.cadaewen.wildbound.companion.CompanionType;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.Holder;
-import net.minecraft.tags.ItemTags;
 import net.minecraft.world.effect.MobEffect;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.animal.bee.Bee;
 import net.minecraft.world.item.Item;
-import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.Level;
 
@@ -25,16 +23,8 @@ public class BeeCompanion extends CompanionType {
 
     @Override
     public Item tamingItem() {
-        // Representative flower (used for the advancement icon); actual taming accepts the whole tag below.
+        // Advancement icon only — a flower for the bee's flavour. Taming is the universal item.
         return Items.POPPY;
-    }
-
-    @Override
-    public boolean isTamingItem(ItemStack stack) {
-        // Any flower tames a bee, EXCEPT the Golden Dandelion: it's in minecraft:flowers but carries a
-        // vanilla age-lock ("halts aging") interaction we don't want to swallow, and it's earmarked as a
-        // companion buff-toggle item. Excluding it keeps that item's vanilla meaning intact on bees.
-        return stack.is(ItemTags.FLOWERS) && !stack.is(Items.GOLDEN_DANDELION);
     }
 
     @Override
