@@ -1,136 +1,113 @@
 # Wildbound — Refinement Backlog
 
-Polish items deferred from initial implementation. These are *known, accepted* rough edges — the core
-loop works; these make it feel better. Grouped loosely; not strictly ordered.
+Open polish items only — the working log. *Known, accepted* rough edges; the core loop works, these make
+it feel better. When something ships, move it to [`completed-refinements.md`](completed-refinements.md)
+(rewritten to describe what was built) so this list stays short.
 
-## Bat movement & perching
+**Per item:** `subsystem` tag · rough effort **S**/**M**/**L** · a `→` source pointer. Checkboxes track
+open work. _Needs a decision_ is blocked on a design call (not code); _Accepted / by design_ are choices,
+not tasks.
 
-- **Bats stack on top of each other when following.** Multiple following bats converge on the same
-  target point (just above the owner's head) and overlap. One briefly disappeared inside another.
-  - *Likely cause:* every bat steers toward an identical target with no separation/spread.
-  - *Ideas:* per-bat target offset (ring/orbit around the owner, seeded by entity id); a light
-    separation nudge when two companions are within ~1 block; stagger follow heights.
-  - Source: `BatCompanion.followOwner` in `companion/bat/BatCompanion.java`.
+## Active — ready to work
 
-- **Hard to aim where a bat perches.** Sit now prefers a ceiling overhead, falls back to perching on
-  the ground below, and only hovers when neither is in reach (over a drop). But the player still can't
-  *aim* it — it picks the nearest surface straight up/down, not the block they're looking at.
-  - *Ideas:* search a small cone/radius rather than a straight column; prefer the block the player is
-    looking at; snap to the owner's targeted block face.
-  - Source: `BatCompanion.hangOrHover` / `findSurface` in `companion/bat/BatCompanion.java`.
-  - *Note:* ground-perch floats ~0.1 block above the surface (vanilla resting pins to `floor(y)+0.1`).
-    Negligible, but if it bugs us, drive a non-resting grounded pose instead.
+- [ ] **Bats stack on top of each other when following** · `bat` · M
+  Multiple following bats converge on the same target (just above the owner's head) and overlap — one
+  briefly vanished inside another. Every bat steers toward an identical point with no separation.
+  *Idea:* per-bat orbit offset seeded by entity id; a light separation nudge under ~1 block; staggered
+  follow heights.
+  → `companion/bat/BatCompanion.java` · `followOwner`
 
-## Roster movement quirks (new companions, accepted for now)
+- [ ] **Hard to aim where a bat perches** · `bat` · M
+  Sit prefers a ceiling overhead, falls back to a ground perch below, hovers only when neither is in reach.
+  But the player can't *aim* it — it takes the nearest surface straight up/down, not the block they're
+  looking at.
+  *Idea:* search a small cone/radius instead of a straight column; prefer the looked-at block; snap to the
+  owner's targeted block face.
+  → `companion/bat/BatCompanion.java` · `hangOrHover` / `findSurface`
+  *Note:* ground-perch floats ~0.1 block above the surface (vanilla resting pins to `floor(y)+0.1`).
+  Negligible; if it bugs us, drive a non-resting grounded pose instead.
 
-These ride the generic goal-based path (follow via navigation; sit holds position via `CompanionSitGoal`,
-which now also delegates a natural pose through `CompanionType.onStartSitting/onSitTick/onStopSitting`).
+- [ ] **Wild predators still hunt tamed prey** · `combat` · M
+  `MobCanAttackMixin` only stops a *companion* attacking another *companion* (so the companion fox no longer
+  kills the owner's rabbit). A *wild* fox/wolf can still hunt a tamed rabbit/companion.
+  *Idea:* protect companions from all non-owned attackers, or make tamed prey not match predator targeting
+  selectors.
+  → `mixin/MobCanAttackMixin.java`
 
-Sit poses now wired:
-- **Panda** — uses vanilla `sit(true)` pose. ✅
-- **Armadillo** — rolls into a ball on sit (vanilla scared state, which peeks periodically on its own). ✅
-- **Axolotl** — the "wandered while sitting" bug is fixed (sit goal now zeroes residual horizontal
-  velocity each tick, needed for swimmers). ✅
-- **Fox** — lies down on sit (vanilla sleeping pose, via a `setSleeping` invoker). ✅
-- **Bee** — no vanilla rest-pose flag exists, so sit makes it fly down and land on the ground
-  (`controlsSitMovement` + `onSitTick`). **Best-effort — verify in-game; may need tuning** (flying move
-  control vs. our descent, and whether it lands cleanly vs. bobbing).
+- **Fox fetch edges** · `fox`
+  The fox pathfinds to the nearest item (`FoxFetchItemGoal`) and acts as a ~1.5-block *mobile magnet*
+  centred on itself — items in the bubble go to the owner via `playerTouch`; its `canPickUpLoot` is off so
+  it can't pocket them. A `STUCK_TICKS` + `BLACKLIST_TICKS` backstop (counting down only after navigation
+  is *done*) covers genuinely walled-off items. Remaining rough spots:
+  - [ ] **(a) Full inventory** makes `playerTouch` a no-op, so the fox keeps re-targeting an item it can't
+    deposit. *Idea:* skip items the owner's inventory can't accept. · S
+  - [ ] **(b) Freshly-thrown items** — it chases one and waits out the ~2s pickup delay rather than
+    ignoring it until pickable. *Idea:* defer targeting until the pickup delay clears. · S
+  - [ ] **(c) No persistent "fetching" indicator** — same no-status-icon gap as the ocelot (see _Needs a
+    decision → Persistent indicator_). · —
+  - *Knob (not a task):* `PICKUP_RADIUS` (1.5) is an internal feel value, deliberately not in config —
+    adjust in code if grabbing reads as too magnet-y.
+  → `companion/fox/FoxFetchItemGoal.java`
 
-Still open:
-- **Wild predators still hunt tamed prey.** `MobCanAttackMixin` only stops a *companion* from attacking
-  another *companion* (fixed: companion fox no longer kills the owner's rabbit). A *wild* fox/wolf can
-  still hunt a tamed rabbit/companion. *Idea:* optionally protect companions from all non-owned attackers,
-  or make tamed prey not match predator targeting selectors.
-- **Ocelot bonus indicator is per-gain only.** A green sparkle shows on the ocelot when it doubles XP, but
-  there is no persistent "bonus active" cue like the status-effect companions' inventory icon. *Idea:* a
-  subtle persistent indicator (e.g. faint periodic particle while an ocelot follows), or surface it in a HUD.
-- **Fox fetch edges.** The fox pathfinds to the nearest item (`FoxFetchItemGoal`) and acts as a ~1.5-block
-  *mobile magnet* centred on itself — items in the bubble go to the owner via `playerTouch`; its vanilla
-  `canPickUpLoot` is off so it can't pocket items. The bubble being wider than where pathfinding parks grabs
-  edge-of-block items that used to freeze it; a `STUCK_TICKS` + `BLACKLIST_TICKS` backstop (countdown only
-  after the navigation is *done*, so far items aren't abandoned mid-walk) covers genuinely walled-off items.
-  Remaining rough spots: (a) a full inventory makes `playerTouch` no-op, so the fox keeps re-targeting an
-  item it can't deposit; (b) it chases a freshly thrown item and waits out the ~2s pickup delay rather than
-  ignoring it until pickable; (c) no persistent "fetching" indicator (same no-status-icon gap as the ocelot
-  above); (d) `PICKUP_RADIUS` (1.5) is an internal feel knob, deliberately not in config — adjust in code if
-  grabbing reads as too magnet-y. *Ideas:* skip
-  items the owner's inventory can't accept; defer targeting until the pickup delay clears.
-- **Axolotl follow on land** — amphibious, so following on land is a slow flop, and the follow-teleport
-  (`canStandAt` wants air over solid) can strand it out of water. *Idea:* prefer water teleport targets.
-- **Armadillo follow** — may still curl up mid-follow if it senses a threat (sprinting player). Cosmetic;
-  *idea:* suppress the threat-roll while following, like the flee-suppress.
-- **Frog** — jump-follows fine; its tongue still snatches nearby slimes/small mobs (characterful, but
-  note it eats baby mobs).
+- [ ] **Axolotl follow on land** · `axolotl` · M
+  Amphibious, so land-follow is a slow flop, and the follow-teleport (`canStandAt` wants air over solid)
+  can strand it out of water.
+  *Idea:* prefer water teleport targets.
+  → `companion/axolotl/AxolotlCompanion.java`
 
-## Effect lifecycle (accepted trade-offs, revisit only if they annoy in practice)
+- [ ] **Armadillo curls up mid-follow** · `armadillo` · S
+  May still roll up when it senses a threat (e.g. a sprinting player) while following. Cosmetic.
+  *Idea:* suppress the threat-roll while following, like the flee-suppress.
+  → `companion/armadillo/ArmadilloCompanion.java`
 
-- Sitting your *last* companion leaves the passive effect lingering up to ~16s (no active teardown,
-  by design — see design-doc-v1 "Passive Effect System"). Revisit only if players find the linger
-  confusing.
-- If your *only* companion dies (vs. sits), the effect also lingers to natural expiry, since a dead
-  entity can't refresh or clear. Optional: a death hook for prompt clear.
+## Needs a decision
 
-## Advancements
+- **Capstone tree wiring** · `advancements`
+  Today the tree fans out: `root` → 8 animal advancements + the capstone, all siblings of `root`. The
+  capstone already *requires* all types, so it's functionally "tame everything" — but visually it only
+  connects to `root`.
+  *Constraint:* MC advancements are **single-parent**, so "all animals draw a line into the capstone" isn't
+  literally possible.
+  *Options:* (a) leave as-is — requirements already gate it; (b) chain it after one specific animal so it
+  reads as an endpoint (arbitrary); (c) move the per-animal advancements under a sub-node and place the
+  capstone as the visible culmination off that node.
+  → pick a layout, then it's `parent` edits in `data/wildbound/advancement/*.json`
 
-- **Taming-item hint — covered by the icon.** ✅ Each per-animal advancement's icon *is* its taming item
-  (bat = spider eye, panda = bamboo, ...), so the badge already hints what to use. Only nuance: the **Bee**
-  icon is a poppy but taming accepts *any* flower — clarify in its description only if it proves confusing.
+- **Persistent "passive active" indicator for non-effect companions** · `ocelot` `fox`
+  The status-effect companions show a HUD effect icon while active; the **ocelot** (XP ×2) and **fox** (item
+  fetch) have no status effect, so they can't. The ocelot only sparkles green per XP-gain; the fox has no
+  cue at all.
+  *Tension:* the cleanest icon would be a **custom MobEffect** used purely as an indicator — but a new
+  effect crosses the design doc's "vanilla items/effects only" rule, and no *vanilla* effect is a clean
+  no-op indicator (Luck affects loot, etc.).
+  *Decision:* accept the custom-effect exception for an indicator, or settle for a non-effect cue (a faint
+  periodic particle while the companion follows, or a future custom HUD widget).
 
-- **Capstone tree wiring — wants all animals to lead into "The Wild Knows Your Name".** Today the tree
-  fans out: `root` → 7 animal advancements + the capstone, all siblings of `root`. The capstone already
-  *requires* all 8 types (its criteria/requirements), so it's functionally the "tame everything" goal —
-  but visually it only connects to `root`.
-  - **Constraint:** Minecraft advancements are **single-parent** — you cannot have all 7 draw lines into
-    the capstone. So "all point to the big one" isn't literally possible in the tree.
-  - **Options to consider:** (a) leave as-is — capstone is a `root` child, requirements already gate it;
-    (b) chain it after a specific animal so it reads as an endpoint (arbitrary); (c) move the per-animal
-    advancements under a sub-node and place the capstone as the visible culmination off that node. Pick
-    the layout, then it's just `parent` edits in the JSON.
+## Verify in-game
 
-## Indicators
+Compiles and loads headlessly; needs an in-client play-test to confirm feel.
 
-- **Effect-pet HUD icon** — now ON (showIcon=true, particles off). The seven status-effect companions
-  show their effect icon while their buff is active. ✅
-- **Ocelot HUD indicator** — the ocelot has no status effect, so it can't show an effect icon; right now it
-  only sparkles green when it doubles XP. Idea: give the ocelot a persistent "active" cue similar to an
-  effect icon — e.g. a **custom green XP-bonus MobEffect** used purely as an indicator. ⚠️ *Tension:* a
-  custom effect is a new effect, which crosses the design doc's "vanilla items/effects only" rule. Decide
-  whether the indicator is worth that exception, or settle for a non-effect cue (periodic faint particle
-  while an ocelot follows, or a future custom HUD widget). No vanilla effect is a clean no-op indicator (Luck
-  affects loot, etc.). The fox (item fetch) shares this no-status-icon gap.
+- [ ] **Bee sit pose** · `bee` — no vanilla rest-pose flag, so sit makes it fly down and land
+  (`controlsSitMovement` + `onSitTick`). Watch: flying move-control vs. our descent, and whether it lands
+  cleanly vs. bobbing. → `companion/bee/BeeCompanion.java`
+- [ ] **Per-animal wander feel** · `all` — wander roams on vanilla AI; confirm it reads well per species.
+- [ ] **Bat wander-leash boundary** · `bat` — the bat's leash is a 3D sphere (pulls back on height too);
+  confirm it doesn't feel jittery at the edge. → `companion/bat/BatCompanion.java` · `leashWander`
 
-## Companion modes / interactions
+## Accepted / by design
 
-- **"Buff off, still following" toggle.** Let the player keep a pet following but turn its passive OFF —
-  e.g. hold an item and **sneak + right-click**. Useful when they want the companion around but not the
-  effect (avoid effect clutter, or save it for when needed).
-  - *Implementation sketch:* a per-companion `buffEnabled` flag (attachment, default true). When false,
-    `CompanionBehavior.refreshPassive` skips applying (and `OcelotXpBonus`/`hasActiveCompanion` treat it as
-    inactive). Follow/sit behaviour unchanged.
-  - *Interaction map (now settled by the wander work):* empty-hand RC = SIT↔FOLLOW; sneak + empty-hand
-    RC = WANDER↔FOLLOW; held-item-on-untamed = taming. So buff-off should take the remaining lane —
-    **held-item-on-tamed** (e.g. sneak + RC while holding a specific item, on your own companion) — rather
-    than reusing sneak+empty-hand RC, which now toggles wander. Pick the trigger item, then `CompanionTaming`
-    grows one more branch (held + tamed + owner).
+Choices we've made, not tasks. Revisit only if they annoy in practice.
 
-- **"Wander" mode (third mode beyond follow/sit).** ✅ **Done.** `SITTING` boolean promoted to a
-  `CompanionMode` enum attachment (FOLLOW / SIT / WANDER). Empty-hand RC toggles SIT↔FOLLOW; sneak +
-  empty-hand RC toggles WANDER↔FOLLOW (`CompanionTaming.toggleMode`). In WANDER the companion roams on
-  vanilla AI, grants no passive, but stays owned (persists, no-flee, not hunted by other companions). The
-  bat returns `false` from `serverTickBehavior` in WANDER (handing flight to vanilla). **Verify in-client:**
-  the held-item lane is still reserved for the future buff-off toggle (see next item). *Best-effort —
-  in-game pass still wanted for wander movement feel per-animal.*
-  - **Wander leash (12 blocks).** ✅ Entering WANDER anchors the companion to that spot (`WANDER_ANCHOR`
-    attachment); goal mobs use vanilla's home-point (`setHomeTo` + `MoveTowardsRestrictionGoal`), the bat
-    steers itself back (`BatCompanion.leashWander`). So a wandering pet stays in a ~12-block bubble and
-    doesn't get lost. The radius is per-mob configurable (`wanderRadius`, default 12). *Possible follow-up:*
-    the bat's leash is a 3D sphere (pulls back on height too) — fine, but verify it doesn't feel jittery at
-    the boundary.
-  - **Teaches itself in-game.** ✅ "Home on the Range" advancement (`wildbound:companion_wandered`, fired
-    from `CompanionTaming` on first wander) names the mechanic; its greyed-out description hints the control
-    (sneak + use).
+- **Effect lingers ~16s after the last companion sits** — no active teardown, by design (see design-doc-v1
+  "Passive Effect System"). The refresh just stops; the effect fades on its own.
+- **Effect lingers if the only companion dies** (vs. sits) — a dead entity can't refresh or clear, so it
+  fades at natural expiry. *Optional:* a death hook for a prompt clear.
+- **Frog tongue snatches nearby slimes/small mobs** — characterful vanilla behaviour, left in; note it can
+  eat baby mobs. Suppress only if it proves annoying.
 
 ## How to use this file
 
-When something is "good enough for now," jot it here with the source location and a sketch of the
-fix, then move on. Pull items into a refinement pass later.
+When something is "good enough for now," jot it under **Active** (or the right section) with a source
+pointer and a one-line fix sketch, then move on. Pull items into a refinement pass later. When one ships,
+move its entry to [`completed-refinements.md`](completed-refinements.md), rewritten to say what was built —
+this file holds **open items only**.
