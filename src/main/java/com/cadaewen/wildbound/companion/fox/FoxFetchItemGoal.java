@@ -24,14 +24,20 @@ import net.minecraft.world.phys.AABB;
  * the loot), not the player, and is a touch wider than where pathfinding tends to park, so an item the fox
  * stops just short of — e.g. perched on a block edge — is still grabbed rather than stared at.
  *
- * <p>Holds MOVE+LOOK at priority 1 — just below {@link CompanionFollowOwnerGoal} (priority 0). So a fox that
- * falls behind its owner abandons the chase and catches up first, which also bounds how far it can stray
- * after loot.
+ * <p>Holds MOVE+LOOK at priority 0 — <b>tied</b> with {@link CompanionFollowOwnerGoal} but registered ahead
+ * of it (the goal selector breaks ties by registration order, and a tie never preempts a running goal). So
+ * while there is loot to collect, fetch outranks follow: the fox chains item to item ({@link #tick}
+ * retargets in-goal rather than stopping per pickup, so the MOVE flag is never yielded between items)
+ * around an owner roaming the work area — the chop-a-forest case — and heels only once the area is clean.
+ * How far it strays is bounded by {@code active()} in {@link #canContinueToUse}: fetch cuts out past
+ * {@link CompanionType#FOLLOW_RANGE}, handing the fox back to follow (and its teleport). At the original
+ * priority 1, follow instead preempted at its 7-block start distance, yo-yoing the fox on any loot just
+ * past that tether.
  */
 public class FoxFetchItemGoal extends Goal {
 
     /** How far from the fox a dropped item is noticed and chased (blocks). */
-    private static final double SEARCH_RADIUS = 8.0;
+    private static final double SEARCH_RADIUS = 10.0;
     private static final double SEARCH_RADIUS_SQR = SEARCH_RADIUS * SEARCH_RADIUS;
 
     /** Radius of the fox's pickup bubble (blocks): items within it are magnetised to the owner. */
@@ -43,12 +49,21 @@ public class FoxFetchItemGoal extends Goal {
     /** How long a failed-to-reach item is ignored before the fox will try it again. */
     private static final int BLACKLIST_TICKS = 100;
 
+    /**
+     * How often an idle fox rescans for loot. The goal selector polls {@code canUse} every tick the fox
+     * isn't otherwise holding the MOVE flag, and the scan is an AABB entity query plus an owner-inventory
+     * check per item found — too heavy for a per-tick idle poll, and a short delay before noticing a drop
+     * is imperceptible (a player-dropped item isn't pickable for 40 ticks anyway).
+     */
+    private static final int SCAN_INTERVAL_TICKS = 10;
+
     private final PathfinderMob mob;
     private final double speed;
     private ItemEntity target;
     private Player owner;
     private int recalcCooldown;
     private int stuckTimer;
+    private int scanCooldown;
     /** Items the fox couldn't reach, by entity id → game-time at which they become eligible again. */
     private final Map<Integer, Long> blacklist = new HashMap<>();
 
@@ -60,6 +75,10 @@ public class FoxFetchItemGoal extends Goal {
 
     @Override
     public boolean canUse() {
+        if (--scanCooldown > 0) {
+            return false;
+        }
+        scanCooldown = adjustedTickDelay(SCAN_INTERVAL_TICKS);
         if (!active()) {
             return false;
         }
@@ -107,8 +126,17 @@ public class FoxFetchItemGoal extends Goal {
         // every tick as the fox approaches, so an item it parks a little short of is still collected.
         collectBubble();
         if (!target.isAlive() || target.getItem().isEmpty()) {
-            // Target got scooped up (or vanished) — let canUse pick the next nearest item next tick.
-            clearTarget();
+            // Target got scooped up (or vanished) — chain straight to the next nearest item rather than
+            // stopping: a stopped goal yields the MOVE flag, and follow (same priority, so it can't be
+            // preempted back) would heel the fox before every next pickup whenever the owner is past the
+            // follow-start distance. Only when no loot is left does the goal end and follow take over.
+            target = nearestItem();
+            if (target == null) {
+                clearTarget();
+                return;
+            }
+            recalcCooldown = 0;
+            stuckTimer = STUCK_TICKS;
             return;
         }
 

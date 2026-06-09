@@ -127,15 +127,22 @@ the mob on taming. This keeps entity identity stable and avoids renderer/attribu
     `CompanionBehavior.hasActiveCompanion(player, EntityType.OCELOT)`; `OcelotXpBonus` does the doubling +
     sparkle. (Was the fox's passive originally.)
   - **Fox**: fetches nearby dropped items into the owner's inventory.
-    `FoxFetchItemGoal` (attached via the `CompanionType.attachGoals` hook, priority 1, just under follow's 0)
-    pathfinds the fox to the nearest `ItemEntity` within 8 blocks, then acts as a **mobile magnet** — every
+    `FoxFetchItemGoal` (attached via the `CompanionType.attachGoals` hook, priority 0, **tied** with follow
+    but registered ahead of it — `CompanionGoals` attaches type goals first, ties break by registration
+    order, and a tie never preempts a running goal — so fetch outranks follow whenever loot is around)
+    pathfinds the fox to the nearest `ItemEntity` within 10 blocks, then acts as a **mobile magnet** — every
     item within a ~1.5-block bubble *around the fox* (not the player) is sent to the owner via vanilla
     `ItemEntity.playerTouch(owner)` (reusing the fly-to-player animation, sound, pickup-delay/target checks,
     and full-inventory handling). The bubble being a little wider than where pathfinding parks is what lets it
     grab an item it stops just short of (e.g. on a block edge) instead of freezing; a `STUCK_TICKS`/`blacklist`
     backstop only triggers for genuinely walled-off items so the fox moves on. Same activation rules as a
-    status passive — following, in range, not milk-quieted; follow outranks it so a fox that falls behind
-    catches up first, bounding how far it strays. `FoxCompanion.serverTickBehavior` turns off the companion
+    status passive — following, in range, not milk-quieted. While loot is around the fox **chains item to
+    item** (`tick` retargets in-goal instead of stopping per pickup, so the MOVE flag is never yielded for
+    follow to claim) around an owner roaming the work area — built for the chop-a-forest case — and heels
+    only when the area is clean. The stray bound is the goal's own owner-range gate (fetch cuts out past
+    `FOLLOW_RANGE`; follow's teleport recovers) — at the original priority 1, follow preempted at its
+    7-block start distance, yo-yoing the fox on loot just past that tether.
+    `FoxCompanion.serverTickBehavior` turns off the companion
     fox's vanilla `canPickUpLoot` so the goal is the sole collector (items go to the owner, not its mouth).
   - **Sheep**: **rideable, no saddle**. An owner's plain empty-hand RC mounts it (via the
     new `CompanionType.onOwnerEmptyHandUse` hook — a rideable companion repurposes the SIT slot for mounting;

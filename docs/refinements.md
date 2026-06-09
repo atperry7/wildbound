@@ -10,7 +10,10 @@ not tasks.
 
 ## Active — ready to work
 
-_(none open)_
+- [ ] **capture · S** — Bound-cluster release snaps the mob to the face-adjacent block centre with no
+  hitbox adjustment, so a wide mob (panda, 1.3 blocks) released against a wall overlaps it. Sketch: offset
+  the spawn point by entity dimensions the way vanilla spawn eggs do. First check in-client whether
+  vanilla push-out already makes this a non-issue. → `companion/CompanionCapture.java` (`release`)
 
 ## Needs a decision
 
@@ -35,6 +38,15 @@ Choices we've made, not tasks. Revisit only if they annoy in practice.
 - **Night Vision granted by both the bat and the axolotl** — intentional, not a duplicate to dedupe. The
   bat is a land/cave light source (it won't dive); the axolotl carries that vision *underwater*, where it
   pairs with the turtle's Water Breathing. Same effect, two non-overlapping use contexts.
+- **Client arm-swing ghost when shard-clicking your own companion** — attachments don't sync, so the
+  client sees every companion as untamed and predicts a taming interaction (SUCCESS + swing) that the
+  server PASSes. Cosmetic only — the shard is consumed server-side only, so nothing is lost. Fixing it
+  means syncing the owner attachment to clients, which one ghost swing doesn't justify.
+  → `companion/CompanionTaming.java`
+- **`syncWanderLeash` clears any externally-set home restriction** on a non-wandering companion each tick.
+  None of our species use the `Mob` home system in vanilla 26.1.2 (turtle/bee track homes via their own
+  fields), so this only matters under another mod that restricts these mobs. Revisit on a reported
+  conflict. → `companion/CompanionBehavior.java`
 - **Rideable sheep makes the mod client+server, and `SheepMixin` stays a *common* mixin** — every other
   feature is server-authoritative and works for a vanilla client (attach-to-vanilla design: no custom
   registries to sync). The sheep's ridden steering + charged jump are the exception: the controlling client

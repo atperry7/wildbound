@@ -37,8 +37,11 @@ public class FoxCompanion extends CompanionType {
 
     @Override
     public void attachGoals(PathfinderMob mob, GoalSelector goals) {
-        // Priority 1: just under the follow goal (0), so catching up to the owner preempts chasing loot.
-        goals.addGoal(1, new FoxFetchItemGoal(mob, 1.2));
+        // Priority 0, tied with the follow goal but registered ahead of it (CompanionGoals attaches type
+        // goals first; ties never preempt a running goal). While loot is around the fox keeps fetching —
+        // even with the owner roaming past the follow-start distance — and heels only when the area is
+        // clean or the owner leaves FOLLOW_RANGE, where the goal deactivates itself.
+        goals.addGoal(0, new FoxFetchItemGoal(mob, 1.2));
     }
 
     /**

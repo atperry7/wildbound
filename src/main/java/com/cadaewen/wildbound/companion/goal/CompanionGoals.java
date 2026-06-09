@@ -24,6 +24,14 @@ public final class CompanionGoals {
         // Per-type follow speed (most use the default boost; fast swimmers override it down to avoid outrunning
         // the owner). type is normally non-null here — guard anyway since attach predates a future config gate.
         double followSpeed = type != null ? type.followSpeed() : CompanionType.DEFAULT_FOLLOW_SPEED;
+        // Companion-type-specific goals FIRST (e.g. the fox's item fetch; no-op for most types). The goal
+        // selector breaks priority ties by registration order and a tie never preempts a running goal, so a
+        // type goal at the shared priority 0 deliberately outranks follow/sit — the fox uses this to keep
+        // clearing loot around a moving owner instead of heeling between items.
+        if (type != null) {
+            type.attachGoals(mob, goals);
+        }
+
         // Priority 0 so follow/sit preempt vanilla wandering while active.
         goals.addGoal(0, new CompanionSitGoal(mob));
         goals.addGoal(0, new CompanionFollowOwnerGoal(mob, followSpeed, 7.0F, 2.5F, 16.0F));
@@ -32,10 +40,5 @@ public final class CompanionGoals {
         // unless a restriction is set, which only happens in WANDER (see CompanionBehavior.syncWanderLeash).
         // Priority 5 so it sits below follow/sit but above vanilla idle wandering.
         goals.addGoal(5, new MoveTowardsRestrictionGoal(mob, 1.0));
-
-        // Companion-type-specific goals (e.g. the fox's item fetch). No-op for most types.
-        if (type != null) {
-            type.attachGoals(mob, goals);
-        }
     }
 }

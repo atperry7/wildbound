@@ -3,6 +3,34 @@
 Shipped refinements, moved out of [`refinements.md`](refinements.md) to keep that file open-items-only.
 One line each — what shipped, plus the key class. Full rationale lives in `design-doc-v1` and `CLAUDE.md`.
 
+## Multiplayer hardening (code-review batch, play-tested)
+
+- **Passenger-capture guard** — capturing a companion riding a boat/minecart now does nothing (pet and
+  cluster both kept). `Entity.save` returns false for passengers; previously the empty stack shipped and
+  the discard deleted the pet. `capture()` now also honours `save`'s return value, so the
+  "serialize-before-discard" invariant is enforced, not just sequenced.
+  (`CompanionTaming`, `CompanionCapture`) ✅
+- **Spectator owners ignored** — the ground follow goal stops mid-chase, and the bat perches instead of
+  teleport-chasing a spectator through walls. (`CompanionFollowOwnerGoal`, `BatCompanion`) ✅
+- **Per-player ocelot XP cache** — the per-tick scan cache is keyed by player UUID and cleared each tick,
+  so simultaneous grinders don't evict each other and no entity reference outlives its tick.
+  (`OcelotXpBonus`) ✅
+
+## Fox fetch retune (work-area vacuum, play-tested)
+
+- **Fetch outranks follow while loot is around** — type goals register ahead of the shared goals (priority
+  ties break by registration order and never preempt a running goal), and the goal chains item to item
+  inside `tick()` rather than stopping per pickup, so follow can't claim the MOVE flag between items. The
+  fox clears a work area (tree felling) around a roaming owner and heels only when the area is clean or
+  the owner leaves `FOLLOW_RANGE` (follow + its teleport recover). Replaces the old priority-1 setup,
+  which yo-yoed the fox on loot just past follow's 7-block tether.
+  (`FoxFetchItemGoal`, `FoxCompanion`, `CompanionGoals`) ✅
+- **Search radius 8 → 10 blocks** — notices drops sooner; pairs with the chaining above so the wider
+  radius is actually reachable. (`FoxFetchItemGoal`) ✅
+- **Fetch idle-scan throttle** — the loot scan polls every 10 ticks instead of every tick when idle
+  (it's an AABB entity query + per-item inventory check); fetch still feels instant in play.
+  (`FoxFetchItemGoal`) ✅
+
 ## Sit poses
 
 Natural per-animal pose on sit, via `CompanionType` hooks driven by `CompanionSitGoal`:
