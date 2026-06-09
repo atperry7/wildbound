@@ -1,0 +1,19 @@
+{
+  "parent": "wildbound:root",
+  "display": {
+    "icon": { "id": "minecraft:apple" },
+    "title": { "text": "Woolly Steed" },
+    "description": { "text": "An apple, and the flock's bravest let you climb on." },
+    "show_toast": true,
+    "announce_to_chat": true
+  },
+  "criteria": {
+    "tamed_sheep": {
+      "trigger": "wildbound:companion_tamed",
+      "conditions": { "animal_type": "minecraft:sheep" }
+    }
+  },
+  "requirements": [
+    ["tamed_sheep"]
+  ]
+}

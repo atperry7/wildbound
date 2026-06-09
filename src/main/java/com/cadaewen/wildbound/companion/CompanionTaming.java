@@ -48,9 +48,14 @@ public final class CompanionTaming {
             if (!player.getUUID().equals(CompanionBehavior.getOwnerUuid(mob))) {
                 return InteractionResult.PASS;
             }
-            if (!level.isClientSide()) {
+            if (!level.isClientSide() && player instanceof ServerPlayer serverPlayer) {
+                // Give the type first crack at the gesture (e.g. a rideable sheep mounts on plain RC).
+                InteractionResult handled = type.onOwnerEmptyHandUse(mob, serverPlayer, player.isShiftKeyDown());
+                if (handled != InteractionResult.PASS) {
+                    return handled;
+                }
                 CompanionMode newMode = toggleMode(mob, player.isShiftKeyDown());
-                if (newMode == CompanionMode.WANDER && player instanceof ServerPlayer serverPlayer) {
+                if (newMode == CompanionMode.WANDER) {
                     ModCriteria.COMPANION_WANDERED.trigger(serverPlayer);
                 }
             }

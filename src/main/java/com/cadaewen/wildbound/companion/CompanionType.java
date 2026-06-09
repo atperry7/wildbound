@@ -3,6 +3,7 @@ package com.cadaewen.wildbound.companion;
 import net.minecraft.core.Holder;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.InteractionResult;
 import net.minecraft.world.effect.MobEffect;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.entity.Mob;
@@ -103,6 +104,17 @@ public abstract class CompanionType {
      * mob is tamed (they gate on companion state), so attaching to an untamed mob is harmless.
      */
     public void attachGoals(PathfinderMob mob, GoalSelector goals) {
+    }
+
+    /**
+     * Per-type handling of an empty-hand right-click by the owner, evaluated before the generic SIT/WANDER
+     * toggle (server-side only). Return a non-{@link InteractionResult#PASS} result to consume the gesture;
+     * return {@code PASS} to let the framework toggle as usual. {@code sneaking} mirrors the toggle split
+     * (sneak ⇒ WANDER, otherwise SIT) so a type can override only the plain-RC half. The rideable sheep uses
+     * this to mount its owner on a plain right-click while leaving sneak-RC to park it via WANDER.
+     */
+    public InteractionResult onOwnerEmptyHandUse(Mob mob, ServerPlayer owner, boolean sneaking) {
+        return InteractionResult.PASS;
     }
 
     /** Called once when a goal-driven companion enters sit mode. Override to apply a natural sit pose. */

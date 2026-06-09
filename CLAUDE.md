@@ -84,7 +84,7 @@ the mob on taming. This keeps entity identity stable and avoids renderer/attribu
   shared effect, and it scales to many companions).
 - Apply with the **6-arg** `MobEffectInstance(..., ambient=true, visible=false, showIcon=true)`. The 5-arg
   form sets `showIcon = visible`, which would hide the HUD icon (the buff's only indicator).
-- **Two companions have non-effect passives** (`passiveEffect()` is `null`; the work runs elsewhere):
+- **Three companions have non-effect passives** (`passiveEffect()` is `null`; the work runs elsewhere):
   - **Ocelot** (tamed with raw cod/salmon): XP ×2. The bonus is `ServerPlayerExperienceMixin`
     (`@ModifyVariable` on `giveExperiencePoints`) gated by
     `CompanionBehavior.hasActiveCompanion(player, EntityType.OCELOT)`; `OcelotXpBonus` does the doubling +
@@ -100,6 +100,14 @@ the mob on taming. This keeps entity identity stable and avoids renderer/attribu
     status passive — following, in range, not milk-quieted; follow outranks it so a fox that falls behind
     catches up first, bounding how far it strays. `FoxCompanion.serverTickBehavior` turns off the companion
     fox's vanilla `canPickUpLoot` so the goal is the sole collector (items go to the owner, not its mouth).
+  - **Sheep** (tamed with an apple): **rideable, no saddle**. An owner's plain empty-hand RC mounts it (via the
+    new `CompanionType.onOwnerEmptyHandUse` hook — a rideable companion repurposes the SIT slot for mounting;
+    sneak-RC still parks it via WANDER). `SheepMixin` adds the pig/horse-style ridden-control overrides
+    (`getControllingPassenger`/`getRiddenInput`/`tickRidden`/`getRiddenSpeed`) so the player steers it with
+    WASD + look, faster than a sprinting player (ridden speed = `MOVEMENT_SPEED` × 0.85 ≈ 0.195). **Step height
+    is free**: vanilla `LivingEntity.maxUpStep()` already returns ≥1.0 (horse-tier) whenever a Player controls
+    the mob, so single blocks need no jump. Control is gated only on the first passenger being a `Player`
+    (works client-side, unlike the server-only owner attachment) — the owner gate lives in the mount interaction.
 
 ### Sit poses
 
@@ -117,13 +125,16 @@ Ground/flying/swimming `PathfinderMob`:
 4. Optional: override sit-pose hooks for a natural pose, or `attachGoals` for type-specific goals (the fox's
    item fetch is the example). **No mixin needed** — `ENTITY_LOAD` attaches the shared + per-type goals.
 
-A mob that bypasses goals (like the bat) needs its own mixin into its AI step instead.
+A mob that bypasses goals (like the bat) needs its own mixin into its AI step instead. A companion with a
+behavior vanilla doesn't expose to goals (like the rideable sheep) likewise gets its own mixin — `SheepMixin`
+merges the ridden-control overrides into `Sheep`.
 
 ## Mixins (`wildbound.mixins.json`)
 
 `AvoidEntityGoalMixin` (companions don't flee players), `BatMixin` (bat AI step), `MobAccessor`
 (goalSelector), `MobCanAttackMixin` (companions don't attack companions), `ServerPlayerExperienceMixin`
-(ocelot XP), `FoxAccessor` (`setSleeping`). Keep this list sorted and in sync with the `mixin/` package.
+(ocelot XP), `FoxAccessor` (`setSleeping`), `SheepMixin` (rideable-sheep ridden control). Keep this list
+sorted and in sync with the `mixin/` package.
 
 ## Gotchas learned
 
