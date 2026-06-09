@@ -40,6 +40,20 @@ public abstract class CompanionType {
     public static final int DEFAULT_WANDER_LEASH_RADIUS = 12;
 
     /**
+     * Navigation speed multiplier the follow goal moves at (multiplies the mob's {@code MOVEMENT_SPEED}
+     * attribute). The 1.2 default is a deliberate ~20% boost so a ground companion can close a gap and
+     * catch up to a walking owner. Fast swimmers must override it down: an axolotl's water move control
+     * already scales its high attribute, so the boost makes it outrun the player and — capped to a slow
+     * yaw turn — overshoot into wide arcs (see {@link com.cadaewen.wildbound.companion.axolotl}).
+     */
+    public static final double DEFAULT_FOLLOW_SPEED = 1.2;
+
+    /** Navigation speed the follow goal uses for this type. Override to retune per animal (e.g. swimmers). */
+    public double followSpeed() {
+        return DEFAULT_FOLLOW_SPEED;
+    }
+
+    /**
      * The animal's signature food, used purely as the icon for its advancement. Taming itself goes through
      * the single universal item ({@link CompanionTaming#TAMING_ITEM}), so this no longer gates taming — it
      * just keeps each advancement reading as that animal's flavour (bamboo for panda, a flower for bee, …).

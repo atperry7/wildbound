@@ -25,4 +25,16 @@ public class AxolotlCompanion extends CompanionType {
     public Holder<MobEffect> passiveEffect() {
         return MobEffects.NIGHT_VISION;
     }
+
+    /**
+     * Swim at the axolotl's own pace — no follow boost. Its water move control sets speed to
+     * {@code followSpeed × MOVEMENT_SPEED(1.0) × 0.1}, so the shared 1.2 boost gives 0.12 b/t, faster than a
+     * swimming player; capped to a ~10°/tick turn it then overshoots into wide arcs. 1.0 → 0.10 b/t keeps it
+     * at the player's pace (the 16-block follow-teleport still backstops a sprinting owner). Tunable: nudge
+     * down if it still overshoots, up if it lags.
+     */
+    @Override
+    public double followSpeed() {
+        return 1.0;
+    }
 }

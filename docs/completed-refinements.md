@@ -70,6 +70,13 @@ Natural per-animal pose on sit, via `CompanionType` hooks driven by `CompanionSi
   rather than all converging just above the head. A stable per-bat angle (golden-angle spread by entity id,
   `ORBIT_RADIUS = 1.2`) plus a small height stagger (`(id % 3) * 0.4`) gives a flock distinct slots; the
   follow teleport drops each bat at its own offset too. `BatCompanion.followOwner`. ✅
+- **Axolotl swims at the owner's pace, no zip** — play-tested in-client. The follow goal passed a fixed
+  1.2 nav-speed boost to every type; for the axolotl (`SmoothSwimmingMoveControl`, in-water mod 0.1,
+  `MOVEMENT_SPEED` 1.0) that meant 0.12 b/t — faster than a swimming player, and the move control's ~10°/tick
+  yaw cap turned each overshoot into a wide arc. Added a per-type `CompanionType.followSpeed()` knob (default
+  1.2) and set the axolotl to 1.0 (0.10 b/t, parity); the 16-block follow-teleport still backstops a sprinting
+  owner. Frog (in-water mod 0.02) and turtle (slow by default) were already slow enough to leave alone.
+  `CompanionGoals` + `AxolotlCompanion.followSpeed`. ✅
 
 ## Mounts
 

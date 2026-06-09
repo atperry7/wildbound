@@ -20,9 +20,13 @@ public final class CompanionGoals {
 
     public static void attachTo(PathfinderMob mob) {
         GoalSelector goals = ((MobAccessor) mob).wildbound$goalSelector();
+        CompanionType type = CompanionRegistry.get(mob);
+        // Per-type follow speed (most use the default boost; fast swimmers override it down to avoid outrunning
+        // the owner). type is normally non-null here — guard anyway since attach predates a future config gate.
+        double followSpeed = type != null ? type.followSpeed() : CompanionType.DEFAULT_FOLLOW_SPEED;
         // Priority 0 so follow/sit preempt vanilla wandering while active.
         goals.addGoal(0, new CompanionSitGoal(mob));
-        goals.addGoal(0, new CompanionFollowOwnerGoal(mob, 1.2, 7.0F, 2.5F, 16.0F));
+        goals.addGoal(0, new CompanionFollowOwnerGoal(mob, followSpeed, 7.0F, 2.5F, 16.0F));
         goals.addGoal(0, new CompanionTickGoal(mob));
         // Wander leash: walks the mob back when it drifts outside its home-point restriction. Dormant
         // unless a restriction is set, which only happens in WANDER (see CompanionBehavior.syncWanderLeash).
@@ -30,7 +34,6 @@ public final class CompanionGoals {
         goals.addGoal(5, new MoveTowardsRestrictionGoal(mob, 1.0));
 
         // Companion-type-specific goals (e.g. the fox's item fetch). No-op for most types.
-        CompanionType type = CompanionRegistry.get(mob);
         if (type != null) {
             type.attachGoals(mob, goals);
         }
