@@ -23,8 +23,13 @@ _(none open)_
 
 Choices we've made, not tasks. Revisit only if they annoy in practice.
 
-- **Effect lingers ~16s after the last companion sits** — no active teardown, by design (see design-doc-v1
+- **Effect lingers ~16s after the last companion goes inactive** (set to wander, milk-quieted, or left out
+  of range — sitting no longer deactivates, v1.8) — no active teardown, by design (see design-doc-v1
   "Passive Effect System"). The refresh just stops; the effect fades on its own.
+- **Re-entering a parked companion's range can take ~5s to re-buff** — the refresh runs on a 100-tick
+  cadence and only fires when the owner is in range. A following companion never exposes this (it's always
+  beside you); a sitting one does. Accepted as refresh-model texture; revisit only if it reads as broken.
+  → `companion/CompanionBehavior.java` (`refreshPassive`)
 - **Effect lingers if the only companion dies** (vs. sits) — a dead entity can't refresh or clear, so it
   fades at natural expiry. *Optional:* a death hook for a prompt clear.
 - **Frog tongue snatches nearby slimes/small mobs** — characterful vanilla behaviour, left in; note it can

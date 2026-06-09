@@ -3,6 +3,16 @@
 Shipped refinements, moved out of [`refinements.md`](refinements.md) to keep that file open-items-only.
 One line each — what shipped, plus the key class. Full rationale lives in `design-doc-v1` and `CLAUDE.md`.
 
+## Sit keeps the buff (v1.8, play-tested)
+
+- **SIT now grants the passive** — a sitting companion refreshes its effect under the same range and
+  milk-quiet gates as a following one, making sit a *parked buff* (plant the bee at the mine entrance,
+  work the area without it underfoot). Each control has one job: FOLLOW = trailing buff, SIT = parked
+  buff, WANDER = off duty, milk = silenced. Mode-gating is centralized in `CompanionMode.grantsPassive`
+  (used by both the effect refresh and `findActiveCompanion`, so the sitting ocelot doubles XP too). The
+  fox is the deliberate exception — fetch stays FOLLOW-only (its sit pose is sleeping, and fetch would
+  fight the sit goal for the MOVE flag). (`CompanionMode`, `CompanionBehavior`) ✅
+
 ## Multiplayer hardening (code-review batch, play-tested)
 
 - **Passenger-capture guard** — capturing a companion riding a boat/minecart now does nothing (pet and

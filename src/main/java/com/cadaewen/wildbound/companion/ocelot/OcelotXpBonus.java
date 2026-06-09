@@ -12,7 +12,7 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.Mob;
 
-/** The Ocelot passive: doubles XP a player receives while a following (non-sitting) tamed ocelot is nearby. */
+/** The Ocelot passive: doubles XP a player receives while an active (following or sitting) tamed ocelot is nearby. */
 public final class OcelotXpBonus {
 
     // Per-tick cache so several XP awards in the same server tick (a burst of orbs, grinding) share one

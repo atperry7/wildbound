@@ -38,8 +38,10 @@ the mob on taming. This keeps entity identity stable and avoids renderer/attribu
   its presence == "is a companion") and `MODE` (the `CompanionMode` enum — `FOLLOW`/`SIT`/`WANDER`,
   persistent; absent == `FOLLOW`). Persistence is automatic. Read mode via `CompanionBehavior`'s
   `isFollowing`/`isSitting`/`isWandering` — **`isFollowing` also checks `isCompanion`** because `getMode`
-  defaults any mob (even untamed) to `FOLLOW`. Only `FOLLOW` is "active" (grants the passive); `WANDER`
-  roams on vanilla AI, still owned (persists, won't flee, won't be hunted by other companions).
+  defaults any mob (even untamed) to `FOLLOW`. **`FOLLOW` and `SIT` are both "active"** (grant the passive —
+  `CompanionBehavior.grantsPassive` / `CompanionMode.grantsPassive`; SIT is a parked buff, the deliberate
+  off-switch is the milk-bucket quiet); `WANDER` is the inert "off duty" mode — roams on vanilla AI granting
+  nothing, still owned (persists, won't flee, won't be hunted by other companions).
   - **Wander leash** — entering WANDER stores a `WANDER_ANCHOR` (BlockPos, persistent). Goal mobs are kept
     near it by vanilla's home-point system: `CompanionBehavior.syncWanderLeash` re-applies `Mob.setHomeTo`
     each tick (vanilla doesn't persist the home, our anchor does) and a `MoveTowardsRestrictionGoal` walks
@@ -115,10 +117,11 @@ the mob on taming. This keeps entity identity stable and avoids renderer/attribu
 
 ### Passive effects
 
-- Following + in-range companions refresh the effect every 100 ticks at a **flicker-safe 320-tick**
-  duration (stays above Night Vision's ~200-tick flicker window). Inactive companions just stop — the
-  effect fades naturally. **No active teardown** (so a sitting companion never cancels a following one's
-  shared effect, and it scales to many companions).
+- Active (following **or sitting**) + in-range companions refresh the effect every 100 ticks at a
+  **flicker-safe 320-tick** duration (stays above Night Vision's ~200-tick flicker window). Inactive
+  companions just stop — the effect fades naturally. **No active teardown** (so a wandering or out-of-range
+  companion never cancels an effect another active one is sustaining, and it scales to many companions).
+  Re-entering range of a parked companion can take up to ~5s (one refresh interval) to re-buff.
 - Apply with the **6-arg** `MobEffectInstance(..., ambient=true, visible=false, showIcon=true)`. The 5-arg
   form sets `showIcon = visible`, which would hide the HUD icon (the buff's only indicator).
 - **Three companions have non-effect passives** (`passiveEffect()` is `null`; the work runs elsewhere):
@@ -135,8 +138,9 @@ the mob on taming. This keeps entity identity stable and avoids renderer/attribu
     `ItemEntity.playerTouch(owner)` (reusing the fly-to-player animation, sound, pickup-delay/target checks,
     and full-inventory handling). The bubble being a little wider than where pathfinding parks is what lets it
     grab an item it stops just short of (e.g. on a block edge) instead of freezing; a `STUCK_TICKS`/`blacklist`
-    backstop only triggers for genuinely walled-off items so the fox moves on. Same activation rules as a
-    status passive — following, in range, not milk-quieted. While loot is around the fox **chains item to
+    backstop only triggers for genuinely walled-off items so the fox moves on. Activation is **deliberately
+    FOLLOW-only** (stricter than status passives, which also run while sitting — a sitting fox is asleep, and
+    fetch would fight the sit goal for the MOVE flag), in range, not milk-quieted. While loot is around the fox **chains item to
     item** (`tick` retargets in-goal instead of stopping per pickup, so the MOVE flag is never yielded for
     follow to claim) around an owner roaming the work area — built for the chop-a-forest case — and heels
     only when the area is clean. The stray bound is the goal's own owner-range gate (fetch cuts out past

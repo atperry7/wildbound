@@ -43,9 +43,18 @@ public final class CompanionBehavior {
         return isCompanion(mob) && getMode(mob) == CompanionMode.FOLLOW;
     }
 
-    /** Sitting: held in a natural pose, no passive. */
+    /** Sitting: held in a natural pose, still granting its passive while the owner is in range. */
     public static boolean isSitting(Mob mob) {
         return getMode(mob) == CompanionMode.SIT;
+    }
+
+    /**
+     * Whether this mob is a companion in a passive-granting mode (FOLLOW or SIT — see
+     * {@link CompanionMode#grantsPassive}). Requires companion status explicitly for the same reason as
+     * {@link #isFollowing}. Range and milk-quiet are checked separately by the callers.
+     */
+    public static boolean grantsPassive(Mob mob) {
+        return isCompanion(mob) && getMode(mob).grantsPassive();
     }
 
     /** Wandering: roaming on vanilla AI, owned but not following and granting no passive. */
@@ -80,17 +89,17 @@ public final class CompanionBehavior {
         return uuid == null ? null : mob.level().getPlayerByUUID(uuid);
     }
 
-    /** True if {@code owner} has a following (non-sitting) companion of {@code type} within follow range. */
+    /** True if {@code owner} has an active (following or sitting) companion of {@code type} within follow range. */
     public static boolean hasActiveCompanion(Player owner, EntityType<?> type) {
         return findActiveCompanion(owner, type) != null;
     }
 
-    /** The nearest following (non-sitting) companion of {@code type} owned by {@code owner} in range, or null. */
+    /** The nearest active (following or sitting) companion of {@code type} owned by {@code owner} in range, or null. */
     public static Mob findActiveCompanion(Player owner, EntityType<?> type) {
         AABB box = owner.getBoundingBox().inflate(
                 CompanionType.FOLLOW_RANGE, CompanionType.FOLLOW_RANGE, CompanionType.FOLLOW_RANGE);
         for (Mob mob : owner.level().getEntitiesOfClass(Mob.class, box, m -> m.getType() == type)) {
-            if (isCompanion(mob) && isFollowing(mob) && !isBuffDisabled(mob)
+            if (grantsPassive(mob) && !isBuffDisabled(mob)
                     && owner.getUUID().equals(getOwnerUuid(mob))
                     && mob.distanceToSqr(owner) <= CompanionType.FOLLOW_RANGE_SQR) {
                 return mob;
@@ -150,17 +159,17 @@ public final class CompanionBehavior {
     }
 
     /**
-     * An active (following, in-range) companion refreshes its passive effect; an inactive one simply
-     * stops, letting the effect fade on its own. There is no teardown scan, so a player can keep many
-     * hundreds of companions cheaply, and a sitting companion never cancels an effect that another
-     * following companion is still sustaining.
+     * An active (following or sitting, in-range) companion refreshes its passive effect; an inactive one
+     * simply stops, letting the effect fade on its own. There is no teardown scan, so a player can keep
+     * many hundreds of companions cheaply, and a wandering or out-of-range companion never cancels an
+     * effect that another active companion is still sustaining.
      */
     private static void refreshPassive(Mob mob, CompanionType type, Player owner, CompanionMode mode) {
         Holder<MobEffect> effect = type.passiveEffect();
         if (effect == null || !(owner instanceof ServerPlayer serverOwner)) {
             return;
         }
-        boolean active = mode == CompanionMode.FOLLOW && !isBuffDisabled(mob)
+        boolean active = mode.grantsPassive() && !isBuffDisabled(mob)
                 && mob.distanceToSqr(owner) <= CompanionType.FOLLOW_RANGE_SQR;
         if (active && mob.tickCount % CompanionType.REAPPLY_INTERVAL_TICKS == 0) {
             type.applyPassiveBonus(serverOwner);

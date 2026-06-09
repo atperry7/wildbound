@@ -37,6 +37,9 @@
 >
 > **Revision note (v1.7, companion capture):** A transport/storage tool, and the mod's first registered item:
 > 16. **Pocket a companion in an amethyst cluster.** Long-distance travel (elytra) and entity lag both leave pets stranded in unloaded chunks; capture solves both. An owner right-clicking their own companion with an **amethyst cluster** (the silk-touch-gated block, distinct from the shard tamer) serializes the whole mob — entity-type id + persistent attachments — into a single-use `wildbound:bound_cluster` item (new `ModItems`/`ModComponents`; the first registered item + data component, which is fine — the no-new-types rule is about *entities*, and the companion is still a plain vanilla mob both in and out of the crystal). Right-clicking a surface releases it and the cluster shatters (single-use, by design). The bound cluster stacks to 1, stores in chests/ender chests, and round-trips through a relog (its NBT lives in a `persistent` + `networkSynchronized` `CustomData` component, the latter so the client titles it "Bound Axolotl"). Capture is owner-gated and refused on a mount carrying a rider; loss is accepted (die holding it → gone, ender chest is the safeguard). A first capture lights the **"In Safe Hands"** teaching advancement off `root`. Built + loads headlessly; the in-client round-trip pass is the open item in `refinements.md`.
+>
+> **Revision note (v1.8, sit keeps the buff):** A play-test-driven mode-semantics change:
+> 17. **SIT now grants the passive.** A sitting companion refreshes its effect exactly like a following one (same range gate, same milk-quiet check) — sit is a *parked buff*: plant the bee at a mine entrance and work the area without it underfoot, relocating it by hand or bound cluster as the work moves. Each control now has one job — **FOLLOW = trailing buff, SIT = parked buff, WANDER = off duty, milk = silenced** — where SIT and milk previously overlapped as two ways to switch the buff off. Mode-gating lives in `CompanionMode.grantsPassive` (FOLLOW or SIT), used by both the effect refresh and `findActiveCompanion` (so the ocelot's XP bonus follows the same rule). **The fox is the deliberate exception**: fetch stays FOLLOW-only — its sit pose is sleeping, and fetch is a movement goal that would fight the sit goal for the MOVE flag — so a sitting fox is parked with no perk. Wherever this doc says sitting deactivates the passive, read WANDER / out-of-range / milk-quiet.
 
 ## Build & Mappings
 
@@ -115,20 +118,20 @@ Most ground animals *do* use the goal system, so future companions can add a `Fo
 
 The passive effect system runs in `CompanionBehavior.serverTick`, called from each companion's AI-step hook. Individual companions implement no tick logic.
 
-**While the companion is FOLLOWING (and the owner is within 24 blocks):**
+**While the companion is FOLLOWING or SITTING (and the owner is within 24 blocks):**
 - Every 5 seconds (100 ticks) it (re)applies `passiveEffect()` at `passiveAmplifier()` with a **16-second (320-tick)** duration, `ambient = true`, `visible = false`
 - Refreshing a 320-tick effect every 100 ticks keeps the remaining time oscillating between 220 and 320 ticks — always above Night Vision's ~200-tick end-of-effect *flicker window*, so an active effect never strobes. (The original 7s/140-tick plan would have flickered permanently.)
 - `visible = false` keeps the HUD clean — only the inventory effect icon shows
 
-**When the companion stops being active (SIT, owner out of range, or unloaded):**
+**When the companion stops being active (WANDER, milk-quieted, owner out of range, or unloaded):**
 - It simply **stops refreshing**. The effect then fades on its own (≤16s). There is **no active removal call.**
-- Rationale: a player may keep many companions. Per-companion teardown either (a) makes a sitting companion cancel an effect a *following* companion is still sustaining, or (b) requires a per-tick scan to check for other providers. Letting the effect lapse naturally avoids both — it scales flat to hundreds of companions and is self-correcting (the last active provider's refresh is simply the last one that lands).
+- Rationale: a player may keep many companions. Per-companion teardown either (a) makes an inactive companion cancel an effect an *active* companion is still sustaining, or (b) requires a per-tick scan to check for other providers. Letting the effect lapse naturally avoids both — it scales flat to hundreds of companions and is self-correcting (the last active provider's refresh is simply the last one that lands).
 
 **Important constraints:**
 - Effect amplifier is always 0 (Level I) — never higher, by design
 - Effects are intentionally "background" — the weakest tier of the effect family
 - Multiple companions granting the same effect don't stack — they all refresh the same single effect instance
-- **Trade-off:** sitting your *last* companion leaves the effect lingering up to its duration (~16s, with vanilla's normal wear-off flicker in the final 10s). Accepted as a fair cost for the performance and correctness wins above.
+- **Trade-off:** setting your *last* companion to wander (or walking out of its range) leaves the effect lingering up to its duration (~16s, with vanilla's normal wear-off flicker in the final 10s). Accepted as a fair cost for the performance and correctness wins above. The flip side: walking *back* into a parked companion's range can take up to one refresh interval (~5s) to re-buff.
 
 ### Effect Reference by Companion
 
@@ -152,7 +155,7 @@ Because there is no vanilla potion effect for XP gain, the Fox passive is implem
   it (mob kills, mining, smelting, breeding, ...), so one `@ModifyVariable` covers all sources cleanly,
   with no per-drop event plumbing.
 - It doubles the amount only when `CompanionBehavior.hasActiveCompanion(player, EntityType.FOX)` is true —
-  i.e. a following (non-sitting) tamed fox owned by the player is within the 24-block follow range.
+  i.e. an active (following or sitting, v1.8) tamed fox owned by the player is within the 24-block follow range.
 - `FoxCompanion.passiveEffect()` returns `null`, so the per-tick status-effect path does nothing for the
   fox; the bonus is entirely event-driven via the mixin. This is the only companion that works this way.
 
@@ -184,7 +187,10 @@ All companions share these behaviors regardless of animal type:
 
 ### Sit Mode
 - Right-click the companion with an empty hand to toggle sit/follow
-- In sit mode: companion stays in place, does not follow, passive effect deactivates
+- In sit mode: companion stays in place and does not follow, but **keeps granting its passive** while the
+  owner is within follow range — a parked buff for working an area without the mob underfoot (v1.8; the
+  deliberate buff off-switch is the milk-bucket quiet, and WANDER is the inert mode)
+- Exception: the fox's fetch perk is FOLLOW-only (its sit pose is sleeping; fetch is a movement goal)
 - Sitting state persists through chunk unload/reload
 - Sitting companions never despawn
 

@@ -187,7 +187,11 @@ public class FoxFetchItemGoal extends Goal {
         clearTarget();
     }
 
-    /** Fetch is active under the same rules as a status passive: following, in range, not milk-quieted. */
+    /**
+     * Fetch requires FOLLOW specifically — stricter than status passives, which also run while sitting. A
+     * sitting fox is asleep, and fetch is a movement goal that would fight {@code CompanionSitGoal} for the
+     * MOVE flag, so SIT parks the fox with no perk. In range and not milk-quieted, as for any passive.
+     */
     private boolean active() {
         if (!CompanionBehavior.isFollowing(mob) || CompanionBehavior.isBuffDisabled(mob)) {
             return false;
