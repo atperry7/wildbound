@@ -17,21 +17,19 @@ not tasks.
   follow heights.
   → `companion/bat/BatCompanion.java` · `followOwner`
 
-- [ ] **Hard to aim where a bat perches** · `bat` · M
-  Sit prefers a ceiling overhead, falls back to a ground perch below, hovers only when neither is in reach.
-  But the player can't *aim* it — it takes the nearest surface straight up/down, not the block they're
-  looking at.
-  *Idea:* search a small cone/radius instead of a straight column; prefer the looked-at block; snap to the
-  owner's targeted block face.
-  → `companion/bat/BatCompanion.java` · `hangOrHover` / `findSurface`
-  *Note:* ground-perch floats ~0.1 block above the surface (vanilla resting pins to `floor(y)+0.1`).
-  Negligible; if it bugs us, drive a non-resting grounded pose instead.
-
 - [ ] **Wild predators still hunt tamed prey** · `combat` · M
   `MobCanAttackMixin` only stops a *companion* attacking another *companion* (so the companion fox no longer
   kills the owner's rabbit). A *wild* fox/wolf can still hunt a tamed rabbit/companion.
   *Idea:* protect companions from all non-owned attackers, or make tamed prey not match predator targeting
   selectors.
+  → `mixin/MobCanAttackMixin.java`
+
+- [ ] **Tamed predators still hunt wild prey** · `combat` · M
+  The mirror of the above: `MobCanAttackMixin` stops companion-vs-companion, but a *tamed* predator (a
+  companion fox, ocelot, axolotl…) can still hunt *wild* prey — wandering off after wild chickens / rabbits
+  / fish instead of staying with the owner.
+  *Idea:* suppress a companion's hunt/attack targeting on non-owned prey while owned (or at least while
+  following), or strip its attack goals on taming — mirroring the flee-suppress.
   → `mixin/MobCanAttackMixin.java`
 
 - **Fox fetch edges** · `fox`
@@ -43,8 +41,6 @@ not tasks.
     deposit. *Idea:* skip items the owner's inventory can't accept. · S
   - [ ] **(b) Freshly-thrown items** — it chases one and waits out the ~2s pickup delay rather than
     ignoring it until pickable. *Idea:* defer targeting until the pickup delay clears. · S
-  - [ ] **(c) No persistent "fetching" indicator** — same no-status-icon gap as the ocelot (see _Needs a
-    decision → Persistent indicator_). · —
   - *Knob (not a task):* `PICKUP_RADIUS` (1.5) is an internal feel value, deliberately not in config —
     adjust in code if grabbing reads as too magnet-y.
   → `companion/fox/FoxFetchItemGoal.java`
@@ -54,11 +50,6 @@ not tasks.
   can strand it out of water.
   *Idea:* prefer water teleport targets.
   → `companion/axolotl/AxolotlCompanion.java`
-
-- [ ] **Armadillo curls up mid-follow** · `armadillo` · S
-  May still roll up when it senses a threat (e.g. a sprinting player) while following. Cosmetic.
-  *Idea:* suppress the threat-roll while following, like the flee-suppress.
-  → `companion/armadillo/ArmadilloCompanion.java`
 
 ## Needs a decision
 
@@ -72,27 +63,6 @@ not tasks.
   reads as an endpoint (arbitrary); (c) move the per-animal advancements under a sub-node and place the
   capstone as the visible culmination off that node.
   → pick a layout, then it's `parent` edits in `data/wildbound/advancement/*.json`
-
-- **Persistent "passive active" indicator for non-effect companions** · `ocelot` `fox`
-  The status-effect companions show a HUD effect icon while active; the **ocelot** (XP ×2) and **fox** (item
-  fetch) have no status effect, so they can't. The ocelot only sparkles green per XP-gain; the fox has no
-  cue at all.
-  *Tension:* the cleanest icon would be a **custom MobEffect** used purely as an indicator — but a new
-  effect crosses the design doc's "vanilla items/effects only" rule, and no *vanilla* effect is a clean
-  no-op indicator (Luck affects loot, etc.).
-  *Decision:* accept the custom-effect exception for an indicator, or settle for a non-effect cue (a faint
-  periodic particle while the companion follows, or a future custom HUD widget).
-
-## Verify in-game
-
-Compiles and loads headlessly; needs an in-client play-test to confirm feel.
-
-- [ ] **Bee sit pose** · `bee` — no vanilla rest-pose flag, so sit makes it fly down and land
-  (`controlsSitMovement` + `onSitTick`). Watch: flying move-control vs. our descent, and whether it lands
-  cleanly vs. bobbing. → `companion/bee/BeeCompanion.java`
-- [ ] **Per-animal wander feel** · `all` — wander roams on vanilla AI; confirm it reads well per species.
-- [ ] **Bat wander-leash boundary** · `bat` — the bat's leash is a 3D sphere (pulls back on height too);
-  confirm it doesn't feel jittery at the edge. → `companion/bat/BatCompanion.java` · `leashWander`
 
 ## Accepted / by design
 
