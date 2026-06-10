@@ -40,6 +40,17 @@ Choices we've made, not tasks. Revisit only if they annoy in practice.
   **companion capture** exists — carry an aquatic companion in a bound cluster across dry stretches rather
   than reworking land pathing. Revisit only if the land-follow flop annoys in practice.
   → `companion/axolotl/AxolotlCompanion.java`, `companion/turtle/TurtleCompanion.java`
+- **Companion buffs vs. beacons/potions of the same effect — no special handling needed.** Vanilla
+  `MobEffectInstance.update` merges same-effect applications: a higher amplifier takes over and stashes the
+  weaker instance as a `hiddenEffect` that resurfaces when the stronger one expires; an equal-or-weaker
+  application can only extend duration or top up the hidden instance, never downgrade. So beacon Haste II
+  over a bee's Haste I wins while in beam range, with the companion's Haste I riding (and being refreshed)
+  underneath, restored seamlessly when the player walks away — no fight, no flicker, worst case the standard
+  ≤5s refresh gap. Same story for stronger potions. Only cosmetic seam: `update` stamps the incoming flags
+  unconditionally, so our `visible=false` refresh suppresses an overlapping potion's swirl particles (and
+  ping-pongs the flag against a beacon's `visible=true` re-applies) — icon and effect strength unaffected.
+  Verified against decompiled 26.1.2 `MobEffectInstance.update` / `BeaconBlockEntity.applyEffects`.
+  → `companion/CompanionType.java` (`applyPassiveBonus`)
 - **Night Vision granted by both the bat and the axolotl** — intentional, not a duplicate to dedupe. The
   bat is a land/cave light source (it won't dive); the axolotl carries that vision *underwater*, where it
   pairs with the turtle's Water Breathing. Same effect, two non-overlapping use contexts.
