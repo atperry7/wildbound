@@ -1,63 +1,83 @@
 # Wildbound
 
-A vanilla+ Fabric mod that lets you tame passive mobs that have never been tameable before. Each
-companion follows you and grants a gentle passive bonus — a quiet reward for the bond between player and
-animal. Taming uses only items already found in vanilla Minecraft; no new items, blocks, or recipes.
+Some creatures the wild never meant to be tamed — until it heard the hum of amethyst. Wildbound is a
+vanilla+ Fabric mod that lets you bond with passive mobs that have never been tameable before. Each
+companion follows you (or settles where you ask) and grants a gentle passive bonus — a quiet reward
+for the bond between player and animal. No new blocks, no crafting recipes; everything works through
+items the game already gives you.
 
 - **Platform:** Minecraft Java Edition · Fabric
 - **Minecraft:** 26.1.2 · **Fabric Loader:** 0.19.3+ · **Fabric API** required · **Java:** 25+
+- Install on the **server and the client** — riding the sheep needs the client side; everything else
+  is server-driven and works even for vanilla clients.
+
+## Taming
+
+Every wild heart answers the same call: an **amethyst shard**. Right-click any companion animal while
+holding one — the shard is spent, and the animal either trusts you (hearts) or doesn't yet (smoke —
+try again, it's a 1-in-3 chance by default). A tamed companion keeps its name, its age, and its
+quirks; it never despawns, and it doesn't respawn if it dies, so look after it.
 
 ## Companions
 
-Right-click a wild animal while holding its taming item. Taming has a chance to succeed (heart
-particles); on failure it puffs smoke — try again. Tamed companions never despawn and don't respawn if
-they die (like classic tamed pets).
+| Animal | Gift | Sit pose |
+|---|---|---|
+| Bat | Night Vision I | Hangs from a ceiling, or perches on the ground |
+| Rabbit | Jump Boost I | Stays put |
+| Frog | Slow Falling I | Stays put |
+| Bee | Haste I | Flies down and lands |
+| Panda | Regeneration I | Sits (vanilla pose) |
+| Armadillo | Resistance I | Rolls into a ball |
+| Axolotl | Night Vision I | Stays put |
+| Turtle | Water Breathing I | Stays put |
+| Ocelot | **XP ×2** | Stays put |
+| Fox | **Fetches dropped items** | Curls up and sleeps |
+| Sheep | **Rideable mount** | — (right-click to ride) |
 
-| Animal | Taming item | Passive (while following) | Sit pose |
-|---|---|---|---|
-| Bat | Spider Eye | Night Vision I | Hangs from a ceiling, or perches on the ground |
-| Rabbit | Dandelion | Jump Boost I | Stays put |
-| Fox | Sweet Berries | **Fetches dropped items** (not a status effect) | Lies down |
-| Ocelot | Raw Cod or Salmon | **XP ×2** (not a status effect) | Stays put |
-| Frog | Slimeball | Slow Falling I | Stays put |
-| Axolotl | Tropical Fish | Water Breathing I | Stays put |
-| Bee | Any flower | Haste I | Flies down and lands |
-| Panda | Bamboo | Regeneration I | Sits (vanilla pose) |
-| Armadillo | Spider Eye | Resistance I | Rolls into a ball |
-| Sheep | Apple | **Rideable mount** (not a status effect) | — (right-click to ride) |
+Effects are intentionally the weakest tier, shown only as a HUD icon (no particle swirl), and granted
+while the companion is **following or sitting** within 24 blocks. Sitting is a *parked* buff — plant
+the bee at the mine entrance and work the area without it underfoot.
 
-Most effects are intentionally the weakest tier (Level I), apply silently (no particles — just the
-effect icon in your HUD), and only while the companion is **following** and within 24 blocks.
+Three companions give something better than a status effect:
 
-Three companions have non-effect passives instead: the **Ocelot** doubles all XP you gain while it
-follows (it sparkles green when the bonus lands), the **Fox** fetches nearby dropped items into your
-inventory, and the **Sheep** is a saddle-free mount — right-click it with an empty hand to ride.
+- The **Ocelot** doubles all XP you earn while it's near (a green sparkle marks the bonus landing).
+- The **Fox** gathers for the den — yours, not its. While you chop, mine, or harvest, it darts from
+  drop to drop and sends everything to your inventory, heeling only when the area is clean.
+- The **Sheep** carries you, no saddle asked. Steer with movement keys, hold jump to charge a leap
+  that clears a two-block ledge, and it paddles gamely across water while ridden.
 
 ## Controls
 
-- **Tame:** right-click a wild companion animal while holding its taming item.
-- **Sit / follow:** right-click your companion with an empty hand to toggle.
-- **Wander / follow:** sneak + right-click with an empty hand to toggle. A wandering companion roams
-  freely near where you set it — still yours and won't run off, but grants no passive.
-- **Quiet / restore a passive:** right-click with a milk bucket to toggle a companion's passive off or
-  on, in case an effect is in your way.
-- Each toggle plays a quick colour + chime cue so you know the new state at a glance — **white = sit,
-  purple = wander, gold = follow** — handy since not every companion has an obvious resting pose.
-- While **sitting**, a companion stays put, takes a natural resting pose (where it has one), and its
-  passive turns off.
+- **Tame:** right-click a wild animal with an **amethyst shard**.
+- **Sit / follow:** right-click your companion with an empty hand. (The sheep mounts instead — park
+  it with sneak + right-click.)
+- **Wander / follow:** sneak + right-click with an empty hand. A wandering companion is off duty —
+  it roams near where you set it, still yours and won't run off, but grants no passive.
+- **Quiet / restore:** right-click with a **milk bucket** to toggle the passive off or on, for when
+  an effect is in your way.
+- **Capture:** right-click your companion with an **amethyst cluster** to fold it into the crystal —
+  a **bound cluster** you can carry, chest, or ender-chest. Right-click a surface to release it; the
+  crystal spends itself, and your companion steps out exactly as it went in. Made for long elytra
+  trips and pets that would otherwise be stranded in unloaded chunks. (If you die holding it, it's
+  gone with you — an ender chest is the safe place for a bound friend.)
 
-A companion only obeys its owner, and tamed animals stay out of combat entirely. **Nothing wild hunts
-your companions** — a wild fox or wolf (or a hostile mob) won't target your tamed rabbit. And **your
-companions won't hunt anything** — a tamed fox, ocelot, or axolotl stays at your side instead of
-chasing wild chickens or fish, so taming a predator calms it down. (The frog's tongue is the one
-playful exception — it'll still snap up a nearby slime.)
+Every toggle answers with a puff of dust in the new mode's colour — **white = sit, purple = wander,
+gold = follow** — and the companion's own voice: the sheep baas, the frog croaks, the turtle keeps
+its silence.
+
+Companions only obey their owner, and tamed animals step out of the food chain entirely. **Nothing
+wild hunts your companions** — a fox, wolf, or hostile mob won't target your tamed rabbit. And
+**your companions hunt nothing** — a tamed fox, ocelot, or axolotl stays at your side instead of
+chasing wild chickens or fish, so taming a predator calms it. (The frog's tongue is the one playful
+exception — it'll still snap up a nearby slime.)
 
 ## Advancements
 
-Pick up any creature's taming food — a flower, an apple, a spider eye — to earn **Wildbound**, an early
-nudge that these animals can be bonded (its description tells you how). Tame your first companion for **A
-Growing Menagerie**, which opens a child advancement for each animal, capped by the challenge **"The Wild
-Knows Your Name"** for taming one of every kind.
+The first amethyst shard you pick up earns **Wildbound** — the wild has noticed you, and the
+advancement tells you what to do with it. Your first bond opens **A Growing Menagerie**, with a child
+advancement for each of the eleven animals, capped by the challenge **The Wild Knows Your Name** for
+taming one of every kind. Three small teaching advancements mark your first wander, first
+milk-quiet, and first capture.
 
 ## Building
 
