@@ -77,10 +77,10 @@ The built jar lands in `build/libs/`. To run a dev client or server:
 
 ## Project docs
 
-- `docs/design-doc-v1` — design document (kept in sync with what's built).
-- `docs/refinements.md` — polish backlog and known rough edges.
-- `CLAUDE.md` — architecture and conventions for contributors/agents.
+- `docs/design.md` — living design document: architecture, mechanics, and design decisions, kept in sync with what's built.
+- `docs/refinements.md` — open polish backlog.
+- `CLAUDE.md` — working conventions for contributors/agents.
 
 ## License
 
-Released under [CC0 1.0](LICENSE) (public domain). Learn from it, fork it, ship it.
+Released under the [MIT License](LICENSE). Learn from it, fork it, ship it.

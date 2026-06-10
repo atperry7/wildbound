@@ -3,6 +3,10 @@
 Guidance for working in this repo. Wildbound is a vanilla+ Fabric mod (MC **26.1.2**, Java **25**) that
 tames passive mobs; each tamed companion follows the player and grants a low-tier passive while in range.
 
+**`docs/design.md` is the living, as-built design document** — architecture, mechanics, and the design
+decisions/trade-offs, kept current with the code. This file covers only how to work here; read the design
+doc before changing behaviour, and update it in the same commit when behaviour changes.
+
 ## Commands
 
 ```bash
@@ -24,213 +28,84 @@ Gameplay/visual behavior still needs an in-client pass.
   `loom.officialMojangMappings()` ("Cannot use Mojang mappings in a non-obfuscated environment"). The
   missing mappings line is correct.
 - Code uses **Mojang names**: `Identifier` (not `ResourceLocation`), `Mob`, `TamableAnimal`, `mobInteract`,
-  `removeEffect`, etc. The design doc is written in Yarn names — translate.
+  `removeEffect`, etc.
 - The dev client uses a **pinned username** (`programArgs("--username", "WildboundDev")` in the loom
   `runs { client {} }` block) so the offline player UUID is stable across launches. Without it the client
   gets a random `Player###`/UUID each run, which breaks owner-gated features (sit/stand) after a reload.
 
-## Architecture — attach-to-vanilla (NOT separate entity types)
+## Architecture map
 
-Tamed state is attached to the **existing vanilla mob**; we do not register `Tamed*Entity` types or swap
-the mob on taming. This keeps entity identity stable and avoids renderer/attribute wiring.
+Attach-to-vanilla: tamed state is Fabric attachments on the **existing vanilla mob** — no `Tamed*Entity`
+types, no entity swap. Full design and rationale in `docs/design.md`; the code lives here:
 
-- **State** — Fabric Attachment API (`companion/WildboundAttachments.java`): `OWNER` (UUID, persistent;
-  its presence == "is a companion") and `MODE` (the `CompanionMode` enum — `FOLLOW`/`SIT`/`WANDER`,
-  persistent; absent == `FOLLOW`). Persistence is automatic. Read mode via `CompanionBehavior`'s
-  `isFollowing`/`isSitting`/`isWandering` — **`isFollowing` also checks `isCompanion`** because `getMode`
-  defaults any mob (even untamed) to `FOLLOW`. **`FOLLOW` and `SIT` are both "active"** (grant the passive —
-  `CompanionBehavior.grantsPassive` / `CompanionMode.grantsPassive`; SIT is a parked buff, the deliberate
-  off-switch is the milk-bucket quiet); `WANDER` is the inert "off duty" mode — roams on vanilla AI granting
-  nothing, still owned (persists, won't flee, won't be hunted by other companions).
-  - **Wander leash** — entering WANDER stores a `WANDER_ANCHOR` (BlockPos, persistent). Goal mobs are kept
-    near it by vanilla's home-point system: `CompanionBehavior.syncWanderLeash` re-applies `Mob.setHomeTo`
-    each tick (vanilla doesn't persist the home, our anchor does) and a `MoveTowardsRestrictionGoal` walks
-    them back past the per-mob `CompanionType.wanderLeashRadius()` (default 12, config-overridable). The
-    **bat** has no goals, so it leashes itself in `BatCompanion.leashWander` (steer back when outside the
-    radius, else cede to vanilla flight). NB the home-point API is on `Mob` and named
-    `setHomeTo`/`hasHome`/`getHomePosition`/`clearHome` this version.
-- **Per-animal definition** — subclass `CompanionType` (passive effect + amplifier, taming chance, sit-pose
-  hooks) and register it in `CompanionRegistry` keyed by `EntityType`. Amplifier and taming chance are mutable
-  fields with config setters (see Config below); the rest is behaviour. `tamingItem()` no longer gates taming
-  (see below) — it only supplies the animal's **advancement icon**.
-- **Shared runtime** — `CompanionBehavior` (ownership/mode access, the per-tick driver `serverTick`, the
-  passive-effect refresh, and `findActiveCompanion`/`hasActiveCompanion`).
-- **Taming + mode toggle** — `CompanionTaming` via Fabric `UseEntityCallback` (no per-animal interact mixin).
-  **Every companion is tamed with one universal item — `CompanionTaming.TAMING_ITEM` (amethyst shard).** A
-  single tamer keeps the player's kit to one stack and, because amethyst is no mob's breeding food and has no
-  vanilla right-click-on-mob interaction, taming never swallows breeding (or any other gesture) — so a wild
-  animal still breeds normally even though its old food once tamed it. Taming is gated by
-  `CompanionRegistry.isEnabled`. Empty-hand RC toggles SIT↔FOLLOW; **sneak**+empty-hand RC toggles
-  WANDER↔FOLLOW. Held-item interactions (other than the universal tamer / milk) stay free for future actions.
-- **Capture / transport** — an owner may pocket their own companion with an **amethyst cluster** (the block,
-  not the shard tamer) to carry or store it past unloaded chunks and entity lag. This is the mod's **first
-  registered item and data component** (everything else is attach-to-vanilla — items are fine, the no-new-types
-  rule is about *entities*). Handled in `CompanionTaming` next to the milk branch: cluster + own companion →
-  `CompanionCapture.capture` serializes the whole mob (`Entity.save` via a `TagValueOutput`, so the entity-type
-  `id` **and** the persistent attachments ride along) into a `wildbound:bound_cluster` item
-  (`item/BoundClusterItem`, stack-of-1, carries the NBT in the `ModComponents.BOUND_ENTITY` `CustomData`
-  component — **persistent only**, read server-side at release; the title is handled separately so the entity
-  NBT never ships to clients). At capture the stack also gets a vanilla **`ITEM_NAME`** (a translatable "Bound
-  %s" that **favours a name-tagged name** — "Bound Batty" — over the species, computed here where the live
-  mob's custom name is in hand) and **`ENCHANTMENT_GLINT_OVERRIDE`** (a faint glint marks a charged cluster
-  while keeping the vanilla amethyst texture). The
-  live mob is `discard()`ed **only after** the stack is built (never lose a pet to a failed serialize); 1 cluster
-  is consumed. `BoundClusterItem.useOn` releases against the clicked face via `EntityType.create(ValueInput,…)`,
-  assigns a fresh UUID, and **shrinks the cluster (single-use — it shatters on release)**. The released mob's
-  goals re-attach through the normal `ENTITY_LOAD` hook, so it comes back a fully-wired companion in its saved
-  mode. **Gated to the owner's own companion** (others/wild → PASS, nothing happens) and **refused on a mount
-  carrying a rider** (`mob.isVehicle()`). Registered in `registry/ModItems` + `registry/ModComponents`; the item
-  is in **no creative tab** (an empty bound cluster is meaningless). New companions are auto-capturable — no
-  per-animal work. Loss is by design (die holding it → gone); the player's safeguard is an ender chest.
-- **Config** — `config/WildboundConfig.java` reads `config/wildbound.json` once at init (generated from
-  defaults if missing) and applies per-mob `enabled` (→ `CompanionRegistry.setEnabled`), `tamingChanceOneInN`,
-  `effectAmplifier`, and `wanderRadius` (→ the matching `CompanionType` setters, all clamped). Flicker
-  constants and follow range are deliberately **not** configurable.
-- **Advancements** — custom triggers in `advancement/`, registered in `registry/ModCriteria` and fired from
-  `CompanionTaming`: `CompanionTamedTrigger` (`wildbound:companion_tamed`, on a successful tame),
-  `CompanionWanderedTrigger` (`wildbound:companion_wandered`, when a companion is first set to wander), and
-  `CompanionCapturedTrigger` (`wildbound:companion_captured`, on the first capture into a bound cluster). JSON in
-  `src/main/resources/data/wildbound/advancement/` (folder is singular `advancement` this version).
-  - **Tree shape (progressive reveal).** `root` ("Wildbound") is **not** a tame trigger — it fires from
-    vanilla `minecraft:inventory_changed` when the player first picks up the universal taming item (an
-    **amethyst shard**), so the tree hints at the mod *before* the first tame and its description teaches the
-    mechanic. (Pre-universal-tamer this was an OR'd list of every per-animal food + the flowers tag.) `menagerie` ("A Growing Menagerie") fires on the
-    first `companion_tamed` and is the **parent of every per-animal advancement and the capstone** (MC
-    advancements are single-parent, so the animals can't each line into the capstone — this makes it read as
-    the culmination of that cluster). `wander`/`quiet`/`capture` (teaching advancements) hang off `root`.
-  - **The capstone is a hand-maintained per-animal list.** `wild_knows_your_name.json` has **no "tame all"
-    trigger** — it enumerates one `companion_tamed` criterion *per animal type* with a matching `requirements`
-    entry. Adding a companion means adding it here too, or the capstone silently stops meaning "every kind"
-    (this is exactly how the **sheep** entry was missed — it required 9 of 10).
-
-### Movement: two paths
-
-- **Goal-driven mobs (most companions — ground/flying/swimming `PathfinderMob`s).** A single
-  `ServerEntityEvents.ENTITY_LOAD` hook (in `Wildbound`) attaches the generic goals
-  (`CompanionFollowOwnerGoal`, `CompanionSitGoal`, `CompanionTickGoal` in `companion/goal/`) to any
-  registered companion. **No per-animal mixin.** The goal selector is reached via the `MobAccessor`
-  `@Accessor` (do NOT `@Shadow` the inherited `goalSelector` field — Mixin doesn't resolve inherited
-  *fields* and it fails at apply time though it compiles).
-- **The Bat** is the exception: it bypasses the goal system (flight is in `customServerAiStep`), so
-  `BatMixin` drives follow/sit there and `BatCompanion` steers `deltaMovement` directly. In `WANDER` its
-  `serverTickBehavior` returns `false` (clearing any leftover rest), handing flight back to vanilla.
-
-### Passive effects
-
-- Active (following **or sitting**) + in-range companions refresh the effect every 100 ticks at a
-  **flicker-safe 320-tick** duration (stays above Night Vision's ~200-tick flicker window). Inactive
-  companions just stop — the effect fades naturally. **No active teardown** (so a wandering or out-of-range
-  companion never cancels an effect another active one is sustaining, and it scales to many companions).
-  Re-entering range of a parked companion can take up to ~5s (one refresh interval) to re-buff.
-- Apply with the **6-arg** `MobEffectInstance(..., ambient=true, visible=false, showIcon=true)`. The 5-arg
-  form sets `showIcon = visible`, which would hide the HUD icon (the buff's only indicator).
-- **Three companions have non-effect passives** (`passiveEffect()` is `null`; the work runs elsewhere):
-  - **Ocelot**: XP ×2. The bonus is `ServerPlayerExperienceMixin`
-    (`@ModifyVariable` on `giveExperiencePoints`) gated by
-    `CompanionBehavior.hasActiveCompanion(player, EntityType.OCELOT)`; `OcelotXpBonus` does the doubling +
-    sparkle. (Was the fox's passive originally.)
-  - **Fox**: fetches nearby dropped items into the owner's inventory.
-    `FoxFetchItemGoal` (attached via the `CompanionType.attachGoals` hook, priority 0, **tied** with follow
-    but registered ahead of it — `CompanionGoals` attaches type goals first, ties break by registration
-    order, and a tie never preempts a running goal — so fetch outranks follow whenever loot is around)
-    pathfinds the fox to the nearest `ItemEntity` within 10 blocks, then acts as a **mobile magnet** — every
-    item within a ~1.5-block bubble *around the fox* (not the player) is sent to the owner via vanilla
-    `ItemEntity.playerTouch(owner)` (reusing the fly-to-player animation, sound, pickup-delay/target checks,
-    and full-inventory handling). The bubble being a little wider than where pathfinding parks is what lets it
-    grab an item it stops just short of (e.g. on a block edge) instead of freezing; a `STUCK_TICKS`/`blacklist`
-    backstop only triggers for genuinely walled-off items so the fox moves on. Activation is **deliberately
-    FOLLOW-only** (stricter than status passives, which also run while sitting — a sitting fox is asleep, and
-    fetch would fight the sit goal for the MOVE flag), in range, not milk-quieted. While loot is around the fox **chains item to
-    item** (`tick` retargets in-goal instead of stopping per pickup, so the MOVE flag is never yielded for
-    follow to claim) around an owner roaming the work area — built for the chop-a-forest case — and heels
-    only when the area is clean. The stray bound is the goal's own owner-range gate (fetch cuts out past
-    `FOLLOW_RANGE`; follow's teleport recovers) — at the original priority 1, follow preempted at its
-    7-block start distance, yo-yoing the fox on loot just past that tether.
-    `FoxCompanion.serverTickBehavior` turns off the companion
-    fox's vanilla `canPickUpLoot` so the goal is the sole collector (items go to the owner, not its mouth).
-  - **Sheep**: **rideable, no saddle**. An owner's plain empty-hand RC mounts it (via the
-    new `CompanionType.onOwnerEmptyHandUse` hook — a rideable companion repurposes the SIT slot for mounting;
-    sneak-RC still parks it via WANDER). `SheepMixin` adds the pig/horse-style ridden-control overrides
-    (`getControllingPassenger`/`getRiddenInput`/`tickRidden`/`getRiddenSpeed`) so the player steers it with
-    WASD + look, faster than a sprinting player (ridden speed = `MOVEMENT_SPEED` × 0.85 ≈ 0.195). **Step height
-    is free**: vanilla `LivingEntity.maxUpStep()` already returns ≥1.0 (horse-tier) whenever a Player controls
-    the mob, so single blocks need no jump. Control is gated only on the first passenger being a `Player`
-    (works client-side, unlike the server-only owner attachment) — the owner gate lives in the mount interaction.
-    - **Charged jump (two-block ledges).** `SheepMixin` also `implements PlayerRideableJumping` — that's the
-      *only* hook the client needs: `LocalPlayer.jumpableVehicle()` checks `instanceof PlayerRideableJumping`,
-      then shows the jump-charge bar and on release sends the charge to the server **and** calls
-      `onPlayerJump`. We stash the charge (`getPlayerJumpPendingScale`, 0.4…1.0) and apply the impulse
-      client-authoritatively in `tickRidden` (`isLocalInstanceAuthoritative() && onGround()`), mirroring
-      `AbstractHorse`. Full-charge impulse `WILDBOUND_JUMP_STRENGTH = 0.6` clears ~2.2 blocks (onto a two-high
-      ledge with margin); a forward boost when `riddenInput.z > 0` carries the rider over rather than straight
-      up. No `JUMP_STRENGTH` attribute (sheep lacks it) — the impulse is computed directly. **Adding the
-      interface is a Mixin feature** (interfaces on the mixin class merge into the target); a headless
-      `runServer` confirms it applies.
-    - **Floats on water (paddle, ridden-only).** *No code* — vanilla `LivingEntity.floatInWaterWhileRidden`
-      (+0.04 Y/tick while `isVehicle()` and submerged past the fluid-jump threshold) plus normal water-slowdown
-      already gives "bob to the surface and paddle across slower." It's gated on the
-      `minecraft:can_float_while_ridden` entity-type tag (horses, camels, …); we just add `minecraft:sheep` to
-      it via `data/minecraft/tags/entity_type/can_float_while_ridden.json` (tags merge, so the vanilla mounts
-      stay). A free-roaming companion sheep is untouched (not a vehicle).
-
-### Sit poses
-
-`CompanionType` has `onStartSitting` / `onSitTick` / `onStopSitting` and a `controlsSitMovement()` flag;
-`CompanionSitGoal` calls them and zeroes residual horizontal velocity each tick. Panda `sit(true)`,
-Armadillo `switchToState(ROLLING)`, Fox `setSleeping(true)` (via `FoxAccessor` `@Invoker`), Bee flies down
-to land (`controlsSitMovement`).
+- **State** — `companion/WildboundAttachments.java` (`OWNER`, `MODE`, `WANDER_ANCHOR`, `BUFF_DISABLED`;
+  all persistent). Read via `CompanionBehavior` accessors — they also check `isCompanion`, because
+  `getMode` defaults any mob to `FOLLOW`.
+- **Per-animal definition** — subclass `CompanionType` (`companion/<animal>/`), register in
+  `CompanionRegistry.init()`.
+- **Shared runtime** — `companion/CompanionBehavior.java` (per-tick driver, passive refresh,
+  `findActiveCompanion`).
+- **Interactions** — `companion/CompanionTaming.java` (one `UseEntityCallback`: universal amethyst-shard
+  taming, mode toggles, milk quiet, capture).
+- **Goals** — attached by the `ENTITY_LOAD` hook in `Wildbound.java`; shared goals in `companion/goal/`.
+  The bat bypasses goals (`BatMixin` + `BatCompanion`); the sheep's ridden control is `SheepMixin`.
+- **Capture** — `companion/CompanionCapture.java` + `item/BoundClusterItem.java`
+  (`registry/ModItems`/`ModComponents`).
+- **Config** — `config/WildboundConfig.java` reads `config/wildbound.json` once at init.
+- **Advancements** — triggers in `advancement/` (registered in `registry/ModCriteria`), JSON in
+  `src/main/resources/data/wildbound/advancement/`.
 
 ## Adding a new companion
 
 Ground/flying/swimming `PathfinderMob`:
-1. `companion/<animal>/<Animal>Companion.java` extends `CompanionType` (`tamingItem()` = advancement icon +
-   `passiveEffect`). Taming is the universal item, so `tamingItem()` is cosmetic — no need to pick a unique one.
+1. `companion/<animal>/<Animal>Companion.java` extends `CompanionType` (`tamingItem()` = advancement icon
+   only — taming is universal — plus `passiveEffect`).
 2. Register it in `CompanionRegistry.init()`.
 3. Add `src/main/resources/data/wildbound/advancement/<animal>.json` (parent `wildbound:menagerie`, **not**
-   `root`), **and** add a `companion_tamed` criterion + `requirements` entry for the new type to
-   `wild_knows_your_name.json` — the capstone is a hand-maintained per-animal list, so skipping this quietly
-   drops the animal from "tame one of every kind" (how sheep got missed). `root.json` needs **no** change —
-   it keys off the single universal taming item, not per-animal foods.
-4. Optional: override sit-pose hooks for a natural pose, or `attachGoals` for type-specific goals (the fox's
-   item fetch is the example). **No mixin needed** — `ENTITY_LOAD` attaches the shared + per-type goals.
+   `root`), **and** add a `companion_tamed` criterion + `requirements` entry to
+   `wild_knows_your_name.json` — the capstone is a hand-maintained per-animal list; skipping this quietly
+   drops the animal from "tame one of every kind". `root.json` needs no change.
+4. Optional: override sit-pose hooks, or `attachGoals` for type-specific goals (fox fetch is the example).
+   **No mixin needed** — `ENTITY_LOAD` attaches the shared + per-type goals.
 
-A mob that bypasses goals (like the bat) needs its own mixin into its AI step instead. A companion with a
-behavior vanilla doesn't expose to goals (like the rideable sheep) likewise gets its own mixin — `SheepMixin`
-merges the ridden-control overrides into `Sheep`.
+A mob that bypasses goals (like the bat) needs its own mixin into its AI step instead; a behavior vanilla
+doesn't expose to goals (like the rideable sheep) likewise gets its own mixin.
 
 ## Mixins (`wildbound.mixins.json`)
 
-`AvoidEntityGoalMixin` (companions don't flee players), `BatMixin` (bat AI step), `MobAccessor`
-(goalSelector accessor + `getAmbientSound` invoker for the mob-voiced mode-toggle cue), `MobCanAttackMixin`
-(companions stay out of mob combat — untargetable as prey,
-pacified as predators), `ServerPlayerExperienceMixin`
-(ocelot XP), `FoxAccessor` (`setSleeping`), `SheepMixin` (rideable-sheep ridden control + `PlayerRideableJumping`
-charged jump). Keep this list sorted and in sync with the `mixin/` package.
+`AvoidEntityGoalMixin` (companions don't flee players), `BatMixin` (bat AI step), `FoxAccessor`
+(`setSleeping`), `MobAccessor` (goalSelector accessor + `getAmbientSound` invoker), `MobCanAttackMixin`
+(companions stay out of mob combat, both directions), `ServerPlayerExperienceMixin` (ocelot XP),
+`SheepMixin` (rideable-sheep ridden control + `PlayerRideableJumping`). Keep this list sorted and in sync
+with the `mixin/` package.
 
 ## Gotchas learned
 
-- Vanilla bat **resting pins to `floor(y)+0.1`** — fine hanging under a ceiling (fractional rest height),
-  but a ground perch's rest height is an integer, so a dip below it yanks the bat a block down. Snap to a
-  stable resting Y before setting `resting` (`BatCompanion.settleTo`).
+- **`@Shadow`/`@Accessor`/`@Invoker` only resolve members *declared on* the `@Mixin` target class, not
+  inherited ones** — it compiles fine and fails at mixin-apply (`InvalidAccessorException`). Either target
+  the declaring class or call public API instead (the mode-toggle cue uses `Level.playSound` because
+  `makeSound` lives on `LivingEntity`, not `Mob`). The shared goals reach `goalSelector` via the
+  `MobAccessor` `@Accessor` for the same reason. **Catch these with a headless `runServer`.**
+- Apply passive effects with the **6-arg** `MobEffectInstance(..., ambient, visible, showIcon)` — the
+  5-arg form sets `showIcon = visible`, hiding the HUD icon (the buff's only indicator).
+- Vanilla bat **resting pins to `floor(y)+0.1`** — fine under a ceiling, but a ground perch's rest height
+  is an integer, so a dip below it yanks the bat a block down. Snap to a stable resting Y before setting
+  `resting` (`BatCompanion.settleTo`).
 - Recurring **port 25565 in use** during back-to-back `runServer` tests = a leftover dev server. Kill
   `net.minecraft`/`GradleWrapperMain` (and free the port) between runs; it's not a mod error. (A leftover
   server also holds `run/world/session.lock`, so the next boot dies with `LockException` — same cleanup.)
-- An **`@Invoker` only resolves methods declared on the `@Mixin` target class, not inherited ones** — same
-  trap as `@Shadow` on inherited fields. `@Invoker("makeSound")` on `@Mixin(Mob.class)` fails at apply time
-  (`InvalidAccessorException: No candidates`) because `makeSound` lives on `LivingEntity`. Either target the
-  declaring class or, as the mode-toggle cue does, just call public API (`Level.playSound`) instead.
-  **Catch this with a headless `runServer`** — it compiles fine and only blows up at mixin-apply.
 
 ## Docs & conventions
 
-- `docs/design-doc-v1` — design doc, kept current (has a "revision note / as built" section).
-- `docs/refinements.md` — **working log of open polish items only.** Jot rough edges here with a source
-  pointer and a one-line fix sketch instead of gold-plating mid-task. Sections by readiness: _Active_
-  (ready to work, checkboxes), _Needs a decision_ (blocked on a design call, not code), _Accepted / by design_
-  (choices, not tasks). Items carry a `subsystem` tag and rough **S/M/L** effort.
-- `docs/completed-refinements.md` — archive of shipped refinements. When an item in `refinements.md` lands,
-  move it here rewritten to describe what was built, so the backlog stays short and current. A gameplay/visual
-  item isn't "landed" until the in-client pass confirms it — compiles-and-loads alone keeps it under _Active_
-  (note the pending play-test in its sketch); there's no separate "verify in-game" parking lot.
-- Commit style: imperative subject + a short body explaining the *why*; one logical change per commit.
-  Work on a feature branch and fast-forward into `main`.
+One home per fact — don't restate content across files, link to it:
+
+- `docs/design.md` — **what & why** (living, as-built): architecture, mechanics, and the "Design decisions
+  & accepted trade-offs" section. Behaviour changes update it in the same commit; settled design questions
+  get recorded there, not in the backlog.
+- `docs/refinements.md` — **open backlog only** (_Active_ / _Needs a decision_). Jot rough edges there with
+  a source pointer and a one-line fix sketch instead of gold-plating mid-task. An item leaves the backlog
+  only when verified — for gameplay/visual items that means the in-client pass, not compiles-and-loads —
+  and simply gets deleted; the closing commit is the record.
+- **The changelog is git.** Commit style: imperative subject + a short body explaining the *why*; for
+  gameplay changes, note verification status in the body ("play-tested in-client" / "pending in-client
+  pass"). One logical change per commit; work on a feature branch and fast-forward into `main`.
