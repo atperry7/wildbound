@@ -14,6 +14,7 @@ doc before changing behaviour, and update it in the same commit when behaviour c
 ./gradlew compileJava    # quick compile check
 ./gradlew runClient      # dev client
 ./gradlew runServer      # dev dedicated server (needs run/eula.txt -> eula=true)
+./gradlew runGameTest    # headless behaviour tests (src/gameTest/); look for "All N required tests passed"
 ./gradlew genSources     # decompile MC sources (inspect real signatures)
 ```
 
@@ -21,6 +22,13 @@ doc before changing behaviour, and update it in the same commit when behaviour c
 to catch apply-time mixin errors and bad advancement JSON that still *compile* fine. Look for
 `Wildbound initialised with N companion type(s).`, the advancement count, and any `Mixin apply ... failed`.
 Gameplay/visual behavior still needs an in-client pass.
+
+**Verify behaviour headlessly:** `runGameTest` boots a real test server (mixins applied, datapack loaded)
+and runs `src/gameTest/java/.../WildboundGameTests.java` — shared framework paths (taming, mode toggles,
+milk quiet, passive delivery, capture round-trip) driven by mock players. The tests are a dev-only mod
+(`wildbound_gametest`, own fabric.mod.json under `src/gameTest/resources/`) and never ship in the release
+jar. Run after any framework change, and as the first check when porting to a new MC version. Visual/feel
+items (sheep riding, bat perch) still need the in-client pass.
 
 ## Build/version facts (don't "fix" these)
 

@@ -1,0 +1,17 @@
+{
+	"schemaVersion": 1,
+	"id": "wildbound_gametest",
+	"version": "1.0.0",
+	"name": "Wildbound GameTests",
+	"description": "Dev-only behaviour tests for Wildbound. Never shipped.",
+	"license": "MIT",
+	"environment": "*",
+	"entrypoints": {
+		"fabric-gametest": [
+			"com.cadaewen.wildbound.gametest.WildboundGameTests"
+		]
+	},
+	"depends": {
+		"wildbound": "*"
+	}
+}

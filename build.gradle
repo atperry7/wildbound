@@ -35,6 +35,18 @@ loom {
 	}
 }
 
+fabricApi {
+	configureTests {
+		// Dev-only source set (src/gameTest/) with its own fabric.mod.json: a separate "wildbound_gametest"
+		// mod that exists only in dev runs, so neither the test classes nor the fabric-gametest entrypoint
+		// ever appear in the release jar. (No modId here — loom reads it from the test mod's json; naming
+		// the main mod would collide with the ModSettings the loom.mods block already creates.)
+		createSourceSet = true
+		enableGameTests = true
+		eula = true
+	}
+}
+
 dependencies {
 	// To change the versions see the gradle.properties file
 	minecraft "com.mojang:minecraft:${project.minecraft_version}"
