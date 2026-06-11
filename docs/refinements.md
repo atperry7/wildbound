@@ -16,6 +16,11 @@ delete the item; the commit is the record.
   hitbox adjustment, so a wide mob (panda, 1.3 blocks) released against a wall overlaps it. Sketch: offset
   the spawn point by entity dimensions the way vanilla spawn eggs do. First check in-client whether
   vanilla push-out already makes this a non-issue. → `companion/CompanionCapture.java` (`release`)
+- [ ] **item · S** — `Item.appendHoverText` is deprecated as of 26.2-rc-1 (still functional). Migrate the
+  bound cluster's tooltip to whatever replaces it before the deprecation becomes removal; also revisit the
+  deprecated-for-removal `GameTestHelper.makeMockServerPlayerInLevel()` the gametests rely on — 26.2 final
+  may ship its replacement. → `item/BoundClusterItem.java` (`appendHoverText`),
+  `src/gametest/.../WildboundGameTests.java`
 
 ## Needs a decision
 

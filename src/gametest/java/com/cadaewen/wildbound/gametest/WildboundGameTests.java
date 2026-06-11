@@ -17,7 +17,7 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.effect.MobEffect;
 import net.minecraft.world.entity.Entity;
-import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.EntityTypes;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
@@ -41,7 +41,7 @@ public final class WildboundGameTests {
     @GameTest
     public void directTameSetsCompanionState(GameTestHelper helper) {
         ServerPlayer owner = helper.makeMockServerPlayerInLevel();
-        Mob rabbit = helper.spawn(EntityType.RABBIT, SPAWN);
+        Mob rabbit = helper.spawn(EntityTypes.RABBIT, SPAWN);
 
         CompanionBehavior.tame(rabbit, owner);
 
@@ -55,7 +55,7 @@ public final class WildboundGameTests {
     @GameTest
     public void shardTamingThroughInteraction(GameTestHelper helper) {
         ServerPlayer player = helper.makeMockServerPlayerInLevel();
-        Mob rabbit = helper.spawn(EntityType.RABBIT, SPAWN);
+        Mob rabbit = helper.spawn(EntityTypes.RABBIT, SPAWN);
         player.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(Items.AMETHYST_SHARD, 64));
 
         // Taming is RNG-gated (1-in-3 by default); 64 attempts make a miss astronomically unlikely
@@ -72,7 +72,7 @@ public final class WildboundGameTests {
     @GameTest
     public void emptyHandTogglesModes(GameTestHelper helper) {
         ServerPlayer owner = helper.makeMockServerPlayerInLevel();
-        Mob rabbit = helper.spawn(EntityType.RABBIT, SPAWN);
+        Mob rabbit = helper.spawn(EntityTypes.RABBIT, SPAWN);
         CompanionBehavior.tame(rabbit, owner);
         owner.setItemInHand(InteractionHand.MAIN_HAND, ItemStack.EMPTY);
 
@@ -92,7 +92,7 @@ public final class WildboundGameTests {
     @GameTest
     public void milkQuietsAndRestoresThePassive(GameTestHelper helper) {
         ServerPlayer owner = helper.makeMockServerPlayerInLevel();
-        Mob rabbit = helper.spawn(EntityType.RABBIT, SPAWN);
+        Mob rabbit = helper.spawn(EntityTypes.RABBIT, SPAWN);
         CompanionBehavior.tame(rabbit, owner);
         owner.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(Items.MILK_BUCKET));
 
@@ -116,7 +116,7 @@ public final class WildboundGameTests {
         Vec3 center = helper.absoluteVec(new Vec3(2.5, 2.0, 2.5));
         owner.snapTo(center.x, center.y, center.z, 0.0f, 0.0f);
 
-        Mob rabbit = helper.spawn(EntityType.RABBIT, SPAWN);
+        Mob rabbit = helper.spawn(EntityTypes.RABBIT, SPAWN);
         CompanionBehavior.tame(rabbit, owner);
         Holder<MobEffect> effect = CompanionRegistry.get(rabbit).passiveEffect();
 
@@ -127,7 +127,7 @@ public final class WildboundGameTests {
     @GameTest
     public void captureAndReleaseRoundTrip(GameTestHelper helper) {
         ServerPlayer owner = helper.makeMockServerPlayerInLevel();
-        Mob rabbit = helper.spawn(EntityType.RABBIT, SPAWN);
+        Mob rabbit = helper.spawn(EntityTypes.RABBIT, SPAWN);
         CompanionBehavior.tame(rabbit, owner);
         owner.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(Items.AMETHYST_CLUSTER));
 

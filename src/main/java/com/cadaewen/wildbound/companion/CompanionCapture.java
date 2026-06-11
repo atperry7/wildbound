@@ -15,6 +15,7 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.util.ProblemReporter;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntitySpawnReason;
+import net.minecraft.world.entity.EntitySpawnRequest;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.item.ItemStack;
@@ -78,7 +79,7 @@ public final class CompanionCapture {
         try (ProblemReporter.ScopedCollector reporter =
                 new ProblemReporter.ScopedCollector(Wildbound.LOGGER)) {
             ValueInput in = TagValueInput.create(reporter, level.registryAccess(), tag);
-            entity = EntityType.create(in, level, EntitySpawnReason.SPAWN_ITEM_USE).orElse(null);
+            entity = EntityType.create(in, level, new EntitySpawnRequest(EntitySpawnReason.SPAWN_ITEM_USE, false)).orElse(null);
         }
         if (entity == null) {
             return null;

@@ -21,6 +21,7 @@ import com.cadaewen.wildbound.companion.turtle.TurtleCompanion;
 
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.EntityTypes;
 
 /** Maps vanilla entity types to their Wildbound companion definitions. */
 public final class CompanionRegistry {
@@ -84,16 +85,16 @@ public final class CompanionRegistry {
 
     /** Registers every companion. Bat is the first; further animals slot in here. */
     public static void init() {
-        register(EntityType.BAT, new BatCompanion());
-        register(EntityType.RABBIT, new RabbitCompanion());
-        register(EntityType.PANDA, new PandaCompanion());
-        register(EntityType.ARMADILLO, new ArmadilloCompanion());
-        register(EntityType.FROG, new FrogCompanion());
-        register(EntityType.BEE, new BeeCompanion());
-        register(EntityType.AXOLOTL, new AxolotlCompanion());
-        register(EntityType.TURTLE, new TurtleCompanion());
-        register(EntityType.FOX, new FoxCompanion());
-        register(EntityType.OCELOT, new OcelotCompanion());
-        register(EntityType.SHEEP, new SheepCompanion());
+        register(EntityTypes.BAT, new BatCompanion());
+        register(EntityTypes.RABBIT, new RabbitCompanion());
+        register(EntityTypes.PANDA, new PandaCompanion());
+        register(EntityTypes.ARMADILLO, new ArmadilloCompanion());
+        register(EntityTypes.FROG, new FrogCompanion());
+        register(EntityTypes.BEE, new BeeCompanion());
+        register(EntityTypes.AXOLOTL, new AxolotlCompanion());
+        register(EntityTypes.TURTLE, new TurtleCompanion());
+        register(EntityTypes.FOX, new FoxCompanion());
+        register(EntityTypes.OCELOT, new OcelotCompanion());
+        register(EntityTypes.SHEEP, new SheepCompanion());
     }
 }
