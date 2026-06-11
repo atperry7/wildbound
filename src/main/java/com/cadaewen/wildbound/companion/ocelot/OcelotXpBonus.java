@@ -9,7 +9,7 @@ import com.cadaewen.wildbound.companion.CompanionBehavior;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.EntityTypes;
 import net.minecraft.world.entity.Mob;
 
 /** The Ocelot passive: doubles XP a player receives while an active (following or sitting) tamed ocelot is nearby. */
@@ -55,7 +55,7 @@ public final class OcelotXpBonus {
         // containsKey rather than computeIfAbsent: "no ocelot nearby" (null) is the common case and must
         // cache too, or every award without an ocelot would rescan.
         if (!cachedOcelots.containsKey(id)) {
-            cachedOcelots.put(id, CompanionBehavior.findActiveCompanion(player, EntityType.OCELOT));
+            cachedOcelots.put(id, CompanionBehavior.findActiveCompanion(player, EntityTypes.OCELOT));
         }
         return cachedOcelots.get(id);
     }
