@@ -17,6 +17,7 @@ import com.cadaewen.wildbound.companion.ocelot.OcelotCompanion;
 import com.cadaewen.wildbound.companion.panda.PandaCompanion;
 import com.cadaewen.wildbound.companion.rabbit.RabbitCompanion;
 import com.cadaewen.wildbound.companion.sheep.SheepCompanion;
+import com.cadaewen.wildbound.companion.strider.StriderCompanion;
 import com.cadaewen.wildbound.companion.turtle.TurtleCompanion;
 
 import net.minecraft.world.entity.Entity;
@@ -96,5 +97,6 @@ public final class CompanionRegistry {
         register(EntityTypes.FOX, new FoxCompanion());
         register(EntityTypes.OCELOT, new OcelotCompanion());
         register(EntityTypes.SHEEP, new SheepCompanion());
+        register(EntityTypes.STRIDER, new StriderCompanion());
     }
 }

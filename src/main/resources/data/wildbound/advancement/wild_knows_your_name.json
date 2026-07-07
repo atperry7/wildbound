@@ -19,7 +19,8 @@
     "panda": { "trigger": "wildbound:companion_tamed", "conditions": { "animal_type": "minecraft:panda" } },
     "armadillo": { "trigger": "wildbound:companion_tamed", "conditions": { "animal_type": "minecraft:armadillo" } },
     "ocelot": { "trigger": "wildbound:companion_tamed", "conditions": { "animal_type": "minecraft:ocelot" } },
-    "sheep": { "trigger": "wildbound:companion_tamed", "conditions": { "animal_type": "minecraft:sheep" } }
+    "sheep": { "trigger": "wildbound:companion_tamed", "conditions": { "animal_type": "minecraft:sheep" } },
+    "strider": { "trigger": "wildbound:companion_tamed", "conditions": { "animal_type": "minecraft:strider" } }
   },
   "requirements": [
     ["bat"],
@@ -32,6 +33,7 @@
     ["panda"],
     ["armadillo"],
     ["ocelot"],
-    ["sheep"]
+    ["sheep"],
+    ["strider"]
   ]
 }

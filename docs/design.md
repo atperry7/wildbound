@@ -2,9 +2,9 @@
 
 **Platform:** Java Edition · Fabric · MC **26.2** (compiled against 26.2, the floor) · Mod ID `wildbound`
 
-A vanilla+ Fabric mod that tames passive mobs that have never been tameable before. Each companion
-grants a low-tier passive bonus to its owner while in range — a gentle reward for the bond between
-player and animal.
+A vanilla+ Fabric mod that tames vanilla mobs that have never been tameable before (see Scope for
+what's shipped vs. planned). Each companion grants a low-tier passive bonus to its owner while in
+range — a gentle reward for the bond between player and animal.
 
 > This document describes the mod **as built** and is kept current — when behaviour changes, this is
 > the file that changes with it. History and the why-of-each-change live in git (commit bodies carry
@@ -23,7 +23,7 @@ player and animal.
 - Respect each animal's vanilla identity (diet, habitat, behaviour).
 - Extensible: adding a companion should require minimal new code and no mixins.
 
-## Companion roster (11)
+## Companion roster (12)
 
 Taming is **universal** — every animal is tamed with an amethyst shard (see Taming). Each animal's
 signature food survives only as its advancement icon (`CompanionType.tamingItem()`).
@@ -41,6 +41,7 @@ signature food survives only as its advancement icon (`CompanionType.tamingItem(
 | Ocelot | **XP ×2** (non-effect) | Their cunning sharpens what you learn from every encounter | Cod |
 | Fox | **Item fetch** (non-effect) | Foxes waste nothing — yours collects for you | Sweet Berries |
 | Sheep | **Rideable mount** (non-effect) | The flock's bravest lets you climb on | Apple |
+| Strider | Fire Resistance I | Lava-walkers who feel no burn; that immunity rubs off on you | Warped Fungus |
 
 ---
 
@@ -291,7 +292,7 @@ teaching advancements hang off the root.
 | *Peace and Quiet* | First milk-quiet | root |
 | *In Safe Hands* | First capture | root |
 | *A Growing Menagerie* | First tame | root |
-| 11 per-animal advancements | Tame that animal | menagerie |
+| 12 per-animal advancements | Tame that animal | menagerie |
 | *The Wild Knows Your Name* (capstone) | Tame one of every kind | menagerie |
 
 **The capstone is a hand-maintained per-animal list** — `wild_knows_your_name.json` enumerates one
@@ -336,6 +337,13 @@ Choices, not tasks. Revisit one only if it annoys in practice.
 - **Aquatic companions (axolotl, turtle) are clumsy following on land** — flop along behind the
   owner; the follow-teleport (`canStandAt` wants air over solid) can drop them out of water.
   De-scoped rather than fixed: carry them across dry stretches in a bound cluster.
+- **Strider follows slowly and "shivers" off lava** (vanilla's own temperature check) but keeps
+  granting Fire Resistance I regardless of terrain. Accepted for the same reason as the aquatic
+  case above, generalized: a player who wants a Strider companion is already living in or near
+  lava, and the bound cluster is the standing answer to *any* companion/terrain mismatch — carry
+  it across the terrain it dislikes rather than re-engineering locomotion per mob. This does not
+  extend to a mob that would take damage or die outside its habitat (none of the current roster
+  does); that case needs an actual fix, not cluster transport.
 - **Client arm-swing ghost when shard-clicking your own companion** — attachments don't sync, so the
   client predicts a taming interaction the server PASSes. Cosmetic only (the shard is consumed
   server-side only); fixing it means syncing the owner attachment to clients, which one ghost swing
@@ -343,11 +351,14 @@ Choices, not tasks. Revisit one only if it annoys in practice.
 - **`syncWanderLeash` clears any externally-set home restriction** on a non-wandering companion each
   tick. No Wildbound species uses the `Mob` home system in vanilla 26.1.2 (turtle/bee track homes
   via their own fields), so this only matters under another mod. Revisit on a reported conflict.
-- **The rideable sheep makes the mod client+server, and `SheepMixin` stays a *common* mixin** —
-  every other feature is server-authoritative and works for a vanilla client. The sheep's steering +
-  charged jump are computed by the controlling client, so the mod is required client-side for that
-  one feature. Do **not** move `SheepMixin` to `src/client`: the server also needs the overrides to
-  route ridden movement and receive the jump packet (vanilla `AbstractHorse` is likewise common).
+- **Client-side code is accepted wherever a companion's mechanic needs it, not merely tolerated for
+  the sheep.** The rideable sheep is the first feature needing client code (steering + charged jump
+  are computed by the controlling client), which makes the mod client+server rather than
+  server-only — a fine trade for the mechanic it buys, and a future companion needing its own
+  client code (a mount, richer combat feedback, whatever the mechanic calls for) can do the same
+  without re-litigating this. `SheepMixin` stays a *common* mixin, not `src/client`: the server also
+  needs the ridden-movement/jump-packet overrides (vanilla `AbstractHorse` is likewise common) — a
+  client-only mixin would only cover half the picture.
 - **Flicker constants and follow range are not configurable** — they encode correctness (the
   flicker window) and balance, not preference.
 
@@ -355,7 +366,8 @@ Choices, not tasks. Revisit one only if it annoys in practice.
 
 ## Scope
 
-**This release is passive mobs only.** Deliberately excluded to keep the vanilla+ feel:
+**Shipped so far: passive (non-combat) companions only.** Deliberately excluded to keep the vanilla+
+feel:
 
 - New taming items (vanilla items only; the bound cluster is transport, not taming)
 - Companion breeding and equipment/inventory
@@ -363,9 +375,15 @@ Choices, not tasks. Revisit one only if it annoys in practice.
 - Shoulder riding
 - Anything already tameable in vanilla (wolves, cats, horses, parrots, …)
 
-**Possible future directions** — not in this release, but the Wildbound narrative can stretch to them
-if we expand:
+**Planned next, not just a hypothetical:**
 
-- Hostile or neutral mobs as companions
-- Companion combat capabilities (this would mean revisiting the full-pacification decision in
-  `MobCanAttackMixin` — companions currently acquire no targets and never retaliate, by design)
+- **Hostile or neutral companions.** The one piece of architecture this needs: `MobCanAttackMixin`
+  (see Combat & targeting) blanket-suppresses `canAttack` for every companion today — that has to
+  become conditional per `CompanionType` rather than removed outright, so passive companions stay
+  non-combat while a combat-capable one can acquire targets and retaliate.
+- **Client-side components are an accepted cost, not scope creep to avoid.** The rideable sheep
+  already makes the mod client+server (see Design decisions); a future companion needing its own
+  client code for its mechanic is fine on the same basis.
+- **Habitat-bound locomotion is not a design problem to solve per mob.** A companion that's clumsy
+  or slow outside its native terrain (aquatic mobs on land, the Strider off lava) is covered by
+  bound-cluster transport (see Design decisions) — not a reason to hesitate on a candidate.

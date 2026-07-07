@@ -1,0 +1,19 @@
+{
+  "parent": "wildbound:menagerie",
+  "display": {
+    "icon": { "id": "minecraft:warped_fungus" },
+    "title": { "text": "Fireproof Friendship" },
+    "description": { "text": "The heat of the Nether can't touch you now." },
+    "show_toast": true,
+    "announce_to_chat": true
+  },
+  "criteria": {
+    "tamed_strider": {
+      "trigger": "wildbound:companion_tamed",
+      "conditions": { "animal_type": "minecraft:strider" }
+    }
+  },
+  "requirements": [
+    ["tamed_strider"]
+  ]
+}

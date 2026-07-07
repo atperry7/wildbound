@@ -33,6 +33,7 @@ quirks; it never despawns, and it doesn't respawn if it dies, so look after it.
 | Ocelot | **XP ×2** | Stays put |
 | Fox | **Fetches dropped items** | Curls up and sleeps |
 | Sheep | **Rideable mount** | — (right-click to ride) |
+| Strider *(new in 1.3.0)* | Fire Resistance I | Stays put |
 
 Effects are intentionally the weakest tier, shown only as a HUD icon (no particle swirl), and granted
 while the companion is **following or sitting** within 24 blocks. Sitting is a *parked* buff — plant
@@ -75,7 +76,7 @@ exception — it'll still snap up a nearby slime.)
 
 The first amethyst shard you pick up earns **Wildbound** — the wild has noticed you, and the
 advancement tells you what to do with it. Your first bond opens **A Growing Menagerie**, with a child
-advancement for each of the eleven animals, capped by the challenge **The Wild Knows Your Name** for
+advancement for each of the twelve animals, capped by the challenge **The Wild Knows Your Name** for
 taming one of every kind. Three small teaching advancements mark your first wander, first
 milk-quiet, and first capture.
 
