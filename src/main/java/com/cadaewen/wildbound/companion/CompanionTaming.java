@@ -10,6 +10,7 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
+import net.minecraft.util.Prediction;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.Entity;
@@ -124,7 +125,7 @@ public final class CompanionTaming {
                 held.shrink(1);
             }
             if (!player.addItem(bound)) {
-                player.drop(bound, false);
+                player.drop(bound, false, Prediction.SERVER_ONLY);
             }
             if (player instanceof ServerPlayer serverPlayer) {
                 ModCriteria.COMPANION_CAPTURED.trigger(serverPlayer);

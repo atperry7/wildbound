@@ -5,10 +5,10 @@ import java.util.Optional;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 
-import net.minecraft.advancements.predicates.ContextAwarePredicate;
-import net.minecraft.advancements.predicates.entity.EntityPredicate;
 import net.minecraft.advancements.triggers.SimpleCriterionTrigger;
+import net.minecraft.core.Holder;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.level.storage.loot.predicates.LootItemCondition;
 
 /**
  * Fires the first time a player quiets a companion's passive with a milk bucket. Backs the "Peace and
@@ -25,11 +25,11 @@ public class CompanionQuietedTrigger extends SimpleCriterionTrigger<CompanionQui
         this.trigger(player, instance -> true);
     }
 
-    public record TriggerInstance(Optional<ContextAwarePredicate> player)
+    public record TriggerInstance(Optional<Holder<LootItemCondition>> player)
             implements SimpleCriterionTrigger.SimpleInstance {
 
         public static final Codec<TriggerInstance> CODEC = RecordCodecBuilder.create(i -> i.group(
-                EntityPredicate.ADVANCEMENT_CODEC.optionalFieldOf("player").forGetter(TriggerInstance::player)
+                LootItemCondition.CODEC.optionalFieldOf("player").forGetter(TriggerInstance::player)
         ).apply(i, TriggerInstance::new));
     }
 }

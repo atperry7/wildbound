@@ -5,13 +5,13 @@ import java.util.Optional;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 
-import net.minecraft.advancements.predicates.ContextAwarePredicate;
-import net.minecraft.advancements.predicates.entity.EntityPredicate;
 import net.minecraft.advancements.triggers.SimpleCriterionTrigger;
+import net.minecraft.core.Holder;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.level.storage.loot.predicates.LootItemCondition;
 
 /**
  * Fires when a player tames a Wildbound companion. A single trigger serves every advancement:
@@ -29,11 +29,11 @@ public class CompanionTamedTrigger extends SimpleCriterionTrigger<CompanionTamed
         this.trigger(player, instance -> instance.matches(typeId));
     }
 
-    public record TriggerInstance(Optional<ContextAwarePredicate> player, Optional<Identifier> animalType)
+    public record TriggerInstance(Optional<Holder<LootItemCondition>> player, Optional<Identifier> animalType)
             implements SimpleCriterionTrigger.SimpleInstance {
 
         public static final Codec<TriggerInstance> CODEC = RecordCodecBuilder.create(i -> i.group(
-                EntityPredicate.ADVANCEMENT_CODEC.optionalFieldOf("player").forGetter(TriggerInstance::player),
+                LootItemCondition.CODEC.optionalFieldOf("player").forGetter(TriggerInstance::player),
                 Identifier.CODEC.optionalFieldOf("animal_type").forGetter(TriggerInstance::animalType)
         ).apply(i, TriggerInstance::new));
 
