@@ -1,6 +1,6 @@
 # CLAUDE.md
 
-How to work in this repo. Wildbound is a vanilla+ Fabric mod (MC **26.2**, Java **25**) that tames
+How to work in this repo. Wildbound is a vanilla+ Fabric mod (MC **26.3**, Java **25**) that tames
 vanilla mobs that were never tameable before — passive companions shipped so far, hostile/neutral
 planned next (see `docs/design.md` Scope). Each tamed companion follows the player and grants a
 low-tier passive while in range.

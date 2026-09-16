@@ -1,6 +1,6 @@
 # Wildbound — Design (living document)
 
-**Platform:** Java Edition · Fabric · MC **26.3-rc-3** (port branch; re-pin to the 26.3 floor at release) · Mod ID `wildbound`
+**Platform:** Java Edition · Fabric · MC **26.3** (compiled against 26.3, the floor) · Mod ID `wildbound`
 
 A vanilla+ Fabric mod that tames vanilla mobs that have never been tameable before (see Scope for
 what's shipped vs. planned). Each companion grants a low-tier passive bonus to its owner while in

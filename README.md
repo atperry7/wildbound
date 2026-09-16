@@ -7,7 +7,7 @@ for the bond between player and animal. No new blocks, no crafting recipes; ever
 items the game already gives you.
 
 - **Platform:** Minecraft Java Edition · Fabric
-- **Minecraft:** 26.3-rc-3 (port branch; re-pin to the 26.3 floor at release) · **Fabric Loader:** 0.19.5+ · **Fabric API** required · **Java:** 25+
+- **Minecraft:** 26.3 · **Fabric Loader:** 0.19.5+ · **Fabric API** required · **Java:** 25+
 - Install on the **server and the client** — riding the sheep needs the client side; everything else
   is server-driven and works even for vanilla clients.
 
